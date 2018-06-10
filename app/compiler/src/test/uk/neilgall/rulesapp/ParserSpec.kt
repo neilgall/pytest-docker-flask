@@ -1,4 +1,4 @@
-package uk.neilgall.rulesapp.parser
+package uk.neilgall.rulesapp
 
 import io.kotlintest.matchers.shouldEqual
 import io.kotlintest.specs.StringSpec

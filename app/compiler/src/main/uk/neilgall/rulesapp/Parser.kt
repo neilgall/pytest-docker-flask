@@ -1,4 +1,4 @@
-package uk.neilgall.rulesapp.parser
+package uk.neilgall.rulesapp
 
 import org.jparsec.Parser
 import org.jparsec.Parsers.or
@@ -99,12 +99,12 @@ internal val lessCondition: Parser<Condition<String>> =
                 attributeName,
                 token("<").next(attributeName),
                 { lhs: String, rhs: String ->
-                    Condition.Not(
-                            Condition.Or(listOf(
-                                    Condition.Equal(lhs, rhs),
-                                    Condition.Greater(lhs, rhs)
-                            ))
-                    )
+                        Condition.Not(
+                                Condition.Or(listOf(
+                                        Condition.Equal(lhs, rhs),
+                                        Condition.Greater(lhs, rhs)
+                                ))
+                        )
                 }
         )
 

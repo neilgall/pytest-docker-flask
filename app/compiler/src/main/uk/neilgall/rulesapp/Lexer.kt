@@ -1,4 +1,4 @@
-package uk.neilgall.rulesapp.parser
+package uk.neilgall.rulesapp
 
 import org.jparsec.*
 import org.jparsec.Parsers.or

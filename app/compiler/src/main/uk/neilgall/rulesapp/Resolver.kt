@@ -1,4 +1,4 @@
-package uk.neilgall.rulesapp.parser
+package uk.neilgall.rulesapp
 
 fun RuleSet<String>.resolve(): RuleSet<Attribute> {
     val attributesByName = attributes.associate({ it.name to it })

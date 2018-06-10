@@ -1,4 +1,4 @@
-package uk.neilgall.rulesapp.parser
+package uk.neilgall.rulesapp
 
 enum class RESTMethod {
     GET, PUT, POST, DELETE
@@ -19,10 +19,10 @@ sealed class Rule<A> {
     data class Always<A>(val decision: Decision): Rule<A>()
     data class Never<A>(val decision: Decision): Rule<A>()
     data class When<A>(val condition: Condition<A>, val decision: Decision): Rule<A>()
-    data class Guard<A>(val condition: Condition<out A>, val rule: Rule<out A>): Rule<A>()
-    data class Majority<A>(val decision: Decision, val rules: List<Rule<out A>>): Rule<A>()
-    data class Any<A>(val decision: Decision, val rules: List<Rule<out A>>): Rule<A>()
-    data class All<A>(val decision: Decision, val rules: List<Rule<out A>>): Rule<A>()
+    data class Guard<A>(val condition: Condition<A>, val rule: Rule<A>): Rule<A>()
+    data class Majority<A>(val decision: Decision, val rules: List<Rule<A>>): Rule<A>()
+    data class Any<A>(val decision: Decision, val rules: List<Rule<A>>): Rule<A>()
+    data class All<A>(val decision: Decision, val rules: List<Rule<A>>): Rule<A>()
 }
 
 sealed class Condition<A> {
