@@ -2,22 +2,29 @@ package uk.neilgall.rulesapp
 
 import org.json.JSONArray
 import org.json.JSONObject
-import org.json.JSONString
+
+private fun attributeToName(attr: Any?): String = when (attr) {
+    is Attribute -> attr.name
+    else -> attr.toString()
+}
 
 fun Attribute.toJSON(): JSONObject = JSONObject(when (this) {
     is Attribute.Constant -> mapOf(
             "type" to "constant",
+            "name" to name,
             "value" to value
     )
     is Attribute.Request -> mapOf(
             "type" to "request",
+            "name" to name,
             "key" to key
     )
-    is Attribute.REST<*> -> mapOf<String, Any>(
+    is Attribute.REST<*> -> mapOf(
             "type" to "rest",
+            "name" to name,
             "url" to url,
             "method" to method.name,
-            "params" to JSONObject(params.mapValues { (it as Attribute).toJSON() })
+            "params" to JSONObject(params.mapValues { attributeToName(it.value) })
     )
 })
 
@@ -38,13 +45,13 @@ fun Condition<Attribute>.toJSON(): JSONObject = JSONObject(when (this) {
     )
     is Condition.Equal -> mapOf(
             "type" to "equal",
-            "lhs" to lhs.toJSON(),
-            "rhs" to rhs.toJSON()
+            "lhs" to lhs.name,
+            "rhs" to rhs.name
     )
     is Condition.Greater -> mapOf(
             "type" to "greater",
-            "lhs " to lhs.toJSON(),
-            "rhs" to rhs.toJSON()
+            "lhs" to lhs.name,
+            "rhs" to rhs.name
     )
 })
 
@@ -69,14 +76,17 @@ fun Rule<Attribute>.toJSON(): JSONObject = JSONObject(when (this) {
     )
     is Rule.Majority -> mapOf(
             "type" to "majority",
+            "decision" to decision.toJSON(),
             "rules" to JSONArray(rules.map { it.toJSON() })
     )
     is Rule.All -> mapOf(
             "type" to "all",
+            "decision" to decision.toJSON(),
             "rules" to JSONArray(rules.map { it.toJSON() })
     )
     is Rule.Any -> mapOf(
             "type" to "any",
+            "decision" to decision.toJSON(),
             "rules" to JSONArray(rules.map { it.toJSON() })
     )
 })

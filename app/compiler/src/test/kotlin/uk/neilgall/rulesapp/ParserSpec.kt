@@ -91,7 +91,7 @@ class ParserSpec : StringSpec({
                         listOf(
                                 Rule.When(Condition.Equal(foo, bar), Decision.Permit),
                                 Rule.When(Condition.Equal(foo, qux), Decision.Permit)
-                        ))
+                        ) as List<Rule<Attribute>>)
                 ))
     }
 

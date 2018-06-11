@@ -15,10 +15,6 @@ fun RuleSet<String>.resolve(): RuleSet<Attribute> {
             }
         })
     }
-    val resolvedRules = rules.map { it.map { lookup(it) }}
 
-    return RuleSet(
-            attributes + dynamicAttributes,
-            resolvedRules
-    )
+    return map({ lookup(it) }).plusAttributes(dynamicAttributes)
 }
