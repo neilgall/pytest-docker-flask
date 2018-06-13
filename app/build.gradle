@@ -62,12 +62,26 @@ project(':compiler') {
     dependencies {
         compile("org.springframework.boot:spring-boot-starter-web")
         compile 'org.jparsec:jparsec:3.0'
-
         compile project(':common')
     }
 
     bootJar {
         baseName = 'rulesapp-compiler'
+        version =  '0.1.0'
+    }
+}
+
+project(':engine') {
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    dependencies {
+        compile("org.springframework.boot:spring-boot-starter-web")
+        compile project(':common')
+    }
+
+    bootJar {
+        baseName = 'rulesapp-engine'
         version =  '0.1.0'
     }
 }
