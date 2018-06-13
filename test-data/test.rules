@@ -1,0 +1,8 @@
+foo = const "foo"
+bar = request "bar"
+
+any permit
+  permit when foo = bar,
+  permit when foo = "qux"
+
+
