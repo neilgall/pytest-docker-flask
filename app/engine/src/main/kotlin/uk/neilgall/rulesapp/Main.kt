@@ -1,5 +1,6 @@
 package uk.neilgall.rulesapp
 
+import org.json.JSONArray
 import org.json.JSONObject
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -21,9 +22,10 @@ open class EngineController {
 
     @RequestMapping("/execute", method = [RequestMethod.POST])
     fun execute(@RequestBody attributes: Map<String, Any>): String {
-        return attributes.toString()
+        val request = attributes.mapValues { it.value.toString() }
+        val results = ruleSet?.evaluate(request) ?: listOf()
+        return JSONArray(results).toString()
     }
-
 }
 
 @SpringBootApplication
