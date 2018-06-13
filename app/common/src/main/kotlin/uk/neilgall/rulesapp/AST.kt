@@ -11,9 +11,9 @@ sealed class Attribute {
     data class REST<A>(override val name: String, val url: String, val method: RESTMethod, val params: Map<String, A>): Attribute()
 
     fun <A, B> map(f: (A) -> B): Attribute = when(this) {
-        is Attribute.Constant -> this
-        is Attribute.Request -> this
-        is Attribute.REST<*> -> Attribute.REST(name, url, method, params.mapValues { f(it.value as A) })
+        is Constant -> this
+        is Request -> this
+        is REST<*> -> REST(name, url, method, params.mapValues { f(it.value as A) })
     }
 }
 
@@ -31,13 +31,13 @@ sealed class Rule<A> {
     data class All<A>(val decision: Decision, val rules: List<Rule<A>>): Rule<A>()
 
     fun <B> map(f: (A) -> B): Rule<B> = when(this) {
-        is Rule.Always -> Rule.Always(decision)
-        is Rule.Never -> Rule.Never(decision)
-        is Rule.When -> Rule.When(condition.map(f), decision)
-        is Rule.Guard -> Rule.Guard(condition.map(f), rule.map(f))
-        is Rule.Majority -> Rule.Majority(decision, rules.map { it.map(f) })
-        is Rule.All -> Rule.All(decision, rules.map { it.map(f) })
-        is Rule.Any -> Rule.Any(decision, rules.map { it.map(f) })
+        is Always -> Always(decision)
+        is Never -> Never(decision)
+        is When -> When(condition.map(f), decision)
+        is Guard -> Guard(condition.map(f), rule.map(f))
+        is Majority -> Majority(decision, rules.map { it.map(f) })
+        is All -> All(decision, rules.map { it.map(f) })
+        is Any -> Any(decision, rules.map { it.map(f) })
     }
 }
 
@@ -49,11 +49,11 @@ sealed class Condition<A> {
     data class Greater<A>(val lhs: A, val rhs: A): Condition<A>()
 
     fun <B> map(f: (A) -> B): Condition<B> = when(this) {
-        is Condition.Not -> Condition.Not(condition.map(f))
-        is Condition.And -> Condition.And(conditions.map { it.map(f) })
-        is Condition.Or -> Condition.Or(conditions.map { it.map(f) })
-        is Condition.Equal -> Condition.Equal(f(lhs), f(rhs))
-        is Condition.Greater -> Condition.Greater(f(lhs), f(rhs))
+        is Not -> Not(condition.map(f))
+        is And -> And(conditions.map { it.map(f) })
+        is Or -> Or(conditions.map { it.map(f) })
+        is Equal -> Equal(f(lhs), f(rhs))
+        is Greater -> Greater(f(lhs), f(rhs))
     }
 
 }

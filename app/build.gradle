@@ -2,18 +2,21 @@ buildscript {
     ext {
         kotlinVersion = '1.2.41'
         log4jVersion = "2.11.0"
+        springBootVersion = "2.0.2.RELEASE"
     }
     repositories {
         mavenCentral()
     }
     dependencies {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
     }
 }
 
 subprojects {
     apply plugin: 'kotlin'
     apply plugin: 'idea'
+
 
     repositories {
         mavenCentral()
@@ -53,7 +56,18 @@ subprojects {
 }
 
 project(':compiler') {
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
     dependencies {
+        compile("org.springframework.boot:spring-boot-starter-web")
         compile 'org.jparsec:jparsec:3.0'
+
+        compile project(':common')
+    }
+
+    bootJar {
+        baseName = 'rulesapp-compiler'
+        version =  '0.1.0'
     }
 }
