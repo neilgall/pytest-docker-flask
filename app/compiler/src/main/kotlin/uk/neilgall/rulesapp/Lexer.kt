@@ -5,7 +5,7 @@ import org.jparsec.Parsers.or
 
 private val keywords = listOf(
         // attribute types
-        "const", "request", "rest",
+        "string", "number", "request", "rest",
 
         // rest methods
         "GET", "PUT", "POST", "DELETE",
@@ -14,21 +14,21 @@ private val keywords = listOf(
         "permit", "deny",
 
         // rules
-        "always", "never", "when", "guard", "majority", "all", "any",
+        "always", "never", "when", "if", "majority", "all", "any",
 
         // conditions
         "not", "and", "or"
 )
 
 private val terminals: Terminals = Terminals
-        .operators("=", "!=", ">", ">=", "<", "<=", ",")
+        .operators("=", "!=", ">", ">=", "<", "<=", ",", ".")
         .words(Scanners.IDENTIFIER)
         .caseInsensitiveKeywords(keywords)
         .build()
 
 private val tokens = or(
-        Scanners.DOUBLE_QUOTE_STRING,
-        Scanners.SINGLE_QUOTE_STRING,
+        Terminals.IntegerLiteral.TOKENIZER,
+        Terminals.StringLiteral.DOUBLE_QUOTE_TOKENIZER,
         terminals.tokenizer()
 )
 

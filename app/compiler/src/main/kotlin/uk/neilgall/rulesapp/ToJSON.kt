@@ -9,8 +9,13 @@ private fun attributeToName(attr: Any?): String = when (attr) {
 }
 
 fun Attribute.toJSON(): JSONObject = JSONObject(when (this) {
-    is Attribute.Constant -> mapOf(
-            "type" to "constant",
+    is Attribute.String -> mapOf(
+            "type" to "string",
+            "name" to name,
+            "value" to value
+    )
+    is Attribute.Number -> mapOf(
+            "type" to "number",
             "name" to name,
             "value" to value
     )
@@ -37,11 +42,13 @@ fun Condition<Attribute>.toJSON(): JSONObject = JSONObject(when (this) {
     )
     is Condition.And -> mapOf(
             "type" to "and",
-            "conditions" to JSONArray(conditions.map { it.toJSON() })
+            "lhs" to lhs.toJSON(),
+            "rhs" to rhs.toJSON()
     )
     is Condition.Or -> mapOf(
             "type" to "or",
-            "conditions" to JSONArray(conditions.map { it.toJSON() })
+            "lhs" to lhs.toJSON(),
+            "rhs" to rhs.toJSON()
     )
     is Condition.Equal -> mapOf(
             "type" to "equal",

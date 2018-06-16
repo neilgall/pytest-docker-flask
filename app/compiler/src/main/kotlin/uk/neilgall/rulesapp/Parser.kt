@@ -1,23 +1,40 @@
 package uk.neilgall.rulesapp
 
+import org.jparsec.OperatorTable
 import org.jparsec.Parser
 import org.jparsec.Parsers.or
 import org.jparsec.Parsers.sequence
 import org.jparsec.Terminals
+import java.util.function.BiFunction
+import java.util.function.BinaryOperator
+import java.util.function.UnaryOperator
 
 internal val quotedString: Parser<String> =
         Terminals.StringLiteral.PARSER.map { it.removeSurrounding("\"") }
+
+internal val integer: Parser<Int> =
+        Terminals.IntegerLiteral.PARSER.map(String::toInt)
+
+internal fun <T> commaListOf(p: Parser<T>): Parser<List<T>> =
+        p.sepBy1(token(",")).followedBy(token("."))
 
 internal val attributeName: Parser<String> = or(
         Terminals.Identifier.PARSER,
         Terminals.StringLiteral.PARSER
 )
 
-internal val constantAttribute: Parser<Attribute> =
+internal val constantStringAttribute: Parser<Attribute> =
         sequence(
                 attributeName,
-                token("=").followedBy(token("const")).next(quotedString),
-                Attribute::Constant
+                token("=").followedBy(token("string")).next(quotedString),
+                Attribute::String
+        )
+
+internal val constantIntegerAttribute: Parser<Attribute> =
+        sequence(
+                attributeName,
+                token("=").followedBy(token("number")).next(integer),
+                Attribute::Number
         )
 
 internal val requestAttribute: Parser<Attribute> =
@@ -54,7 +71,8 @@ internal val restAttribute: Parser<Attribute> =
         )
 
 internal val attribute: Parser<Attribute> = or(
-        constantAttribute,
+        constantIntegerAttribute,
+        constantStringAttribute,
         requestAttribute,
         restAttribute
 )
@@ -64,14 +82,14 @@ internal val decision: Parser<Decision> = or(
         token("deny").retn(Decision.Deny)
 )
 
-internal val notCondition: Parser<Condition<String>> =
-        token("not").next(condition()).map { c -> Condition.Not(c) }
-
-internal val andCondition: Parser<Condition<String>> =
-        token("and").next(condition().sepBy1(token(","))).map { cs -> Condition.And(cs) }
-
-internal val orCondition: Parser<Condition<String>> =
-        token("or").next(condition().sepBy1(token(","))).map { cs -> Condition.Or(cs) }
+//internal val notCondition: Parser<Condition<String>> =
+//        token("not").next(condition).map { c -> Condition.Not(c) }
+//
+//internal val andCondition: Parser<Condition<String>> =
+//        token("and").next(commaListOf(condition())).map { cs -> Condition.And(cs) }
+//
+//internal val orCondition: Parser<Condition<String>> =
+//        token("or").next(commaListOf(condition())).map { cs -> Condition.Or(cs) }
 
 internal val equalCondition: Parser<Condition<String>> =
         sequence(
@@ -99,24 +117,36 @@ internal val lessCondition: Parser<Condition<String>> =
                 attributeName,
                 token("<").next(attributeName),
                 { lhs: String, rhs: String ->
-                        Condition.Not(
-                                Condition.Or(listOf(
-                                        Condition.Equal(lhs, rhs),
-                                        Condition.Greater(lhs, rhs)
-                                ))
-                        )
+                    Condition.Not(
+                            Condition.Or(
+                                    Condition.Equal(lhs, rhs),
+                                    Condition.Greater(lhs, rhs)
+                            )
+                    )
                 }
         )
 
-internal fun condition(): Parser<Condition<String>> = or(
+internal fun compareCondition(): Parser<Condition<String>> = or(
         equalCondition,
         notEqualCondition,
         greaterCondition,
-        lessCondition,
-        andCondition,
-        orCondition,
-        notCondition
+        lessCondition
 )
+
+// Strange issue with Java/Kotlin lambdas+generics interop needs these adapters
+private fun <T> uop(t: String, f: (T) -> T): Parser<UnaryOperator<T>> = token(t).retn(object: UnaryOperator<T> {
+    override fun apply(t: T): T = f(t)
+})
+
+private fun <T> bop(t: String, f: (T, T) -> T): Parser<BinaryOperator<T>> = token(t).retn(object: BinaryOperator<T> {
+    override fun apply(t: T, u: T): T = f(t, u)
+})
+
+internal val condition = OperatorTable<Condition<String>>()
+        .prefix(uop("not", { c -> Condition.Not(c) }), 11)
+        .infixl(bop("and", { l,r -> Condition.And(l, r) }), 10)
+        .infixl(bop("or", { l, r -> Condition.Or(l, r) }), 9)
+        .build(compareCondition())
 
 internal val alwaysRule: Parser<Rule<String>> =
         token("always").next(decision).map { d -> Rule.Always<String>(d) }
@@ -127,13 +157,13 @@ internal val neverRule: Parser<Rule<String>> =
 internal val whenRule: Parser<Rule<String>> =
         sequence(
                 decision,
-                token("when").next(condition()),
+                token("when").next(condition),
                 { d, c -> Rule.When(c, d) }
         )
 
 internal val guardRule: Parser<Rule<String>> =
         sequence(
-                token("guard").next(condition()),
+                token("if").next(condition),
                 rule(),
                 { c, r -> Rule.Guard(c, r) }
         )
@@ -141,21 +171,21 @@ internal val guardRule: Parser<Rule<String>> =
 internal val majorityRule: Parser<Rule<String>> =
         sequence(
                 token("majority").next(decision),
-                rule().sepBy1(token(",")),
+                commaListOf(rule()),
                 { d, rs -> Rule.Majority(d, rs) }
         )
 
 internal val allRule: Parser<Rule<String>> =
         sequence(
                 token("all").next(decision),
-                rule().sepBy1(token(",")),
+                commaListOf(rule()),
                 { d, rs -> Rule.All(d, rs) }
         )
 
 internal val anyRule: Parser<Rule<String>> =
         sequence(
                 token("any").next(decision),
-                rule().sepBy1(token(",")),
+                commaListOf(rule()),
                 { d, rs -> Rule.Any(d, rs) }
         )
 

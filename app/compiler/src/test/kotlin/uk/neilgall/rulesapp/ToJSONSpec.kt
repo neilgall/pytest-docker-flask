@@ -17,10 +17,16 @@ private fun beJSON(s: String) = object : Matcher<JSONObject> {
     }
 }
 
-class ToJSONSpec : StringSpec({
-    "constant attribute" {
-        Attribute.Constant("foo", "bar").toJSON() should beJSON("""
-            {"type":"constant","name":"foo","value":"bar"}
+class AttributeToJSONSpec : StringSpec({
+    "string attribute" {
+        Attribute.String("foo", "bar").toJSON() should beJSON("""
+            {"type":"string","name":"foo","value":"bar"}
+        """)
+    }
+
+    "number attribute" {
+        Attribute.Number("foo", 132).toJSON() should beJSON("""
+            {"type":"number","name":"foo","value":132}
         """)
     }
 
@@ -39,11 +45,13 @@ class ToJSONSpec : StringSpec({
             {"name":"foo","type":"rest","method":"PUT","params":{"abc":"xyz"},"url":"http://foo/bar/"}
         """)
     }
+})
 
+class ConditionToJSONSpec : StringSpec({
     "equals condition" {
         Condition.Equal<Attribute>(
-                Attribute.Constant("foo", "bar"),
-                Attribute.Constant("qux", "xyz")
+                Attribute.String("foo", "bar"),
+                Attribute.String("qux", "xyz")
         ).toJSON() should beJSON("""
             {"type":"equal","rhs":"qux","lhs":"foo"}
         """)
@@ -51,8 +59,8 @@ class ToJSONSpec : StringSpec({
 
     "greater condition" {
         Condition.Greater<Attribute>(
-                Attribute.Constant("foo", "bar"),
-                Attribute.Constant("qux", "xyz")
+                Attribute.String("foo", "bar"),
+                Attribute.String("qux", "xyz")
         ).toJSON() should beJSON("""
             {"type":"greater","rhs":"qux","lhs":"foo"}
         """)
@@ -61,8 +69,8 @@ class ToJSONSpec : StringSpec({
     "not condition" {
         Condition.Not(
                 Condition.Equal<Attribute>(
-                        Attribute.Constant("foo", "bar"),
-                        Attribute.Constant("qux", "xyz")
+                        Attribute.String("foo", "bar"),
+                        Attribute.String("qux", "xyz")
                 )
         ).toJSON() should beJSON("""
             {"type":"not","condition":{"type":"equal","rhs":"qux","lhs":"foo"}}
@@ -70,39 +78,41 @@ class ToJSONSpec : StringSpec({
     }
 
     "and condition" {
-        Condition.And(listOf(
+        Condition.And(
                 Condition.Equal<Attribute>(
-                        Attribute.Constant("foo", "bar"),
-                        Attribute.Constant("qux", "xyz")
+                        Attribute.String("foo", "bar"),
+                        Attribute.String("qux", "xyz")
                 ),
                 Condition.Greater<Attribute>(
-                        Attribute.Constant("abc", "ghi"),
-                        Attribute.Constant("def", "jkl")
+                        Attribute.String("abc", "ghi"),
+                        Attribute.String("def", "jkl")
                 )
-        )).toJSON() should beJSON("""
-            {"type":"and","conditions":[
-            {"type":"equal","rhs":"qux","lhs":"foo"},
-            {"type":"greater","rhs":"def","lhs":"abc"}]}
+        ).toJSON() should beJSON("""
+            {"type":"and",
+            "lhs":{"type":"equal","rhs":"qux","lhs":"foo"},
+            "rhs":{"type":"greater","rhs":"def","lhs":"abc"}}
         """)
     }
 
     "or condition" {
-        Condition.Or(listOf(
+        Condition.Or(
                 Condition.Equal<Attribute>(
-                        Attribute.Constant("foo", "bar"),
-                        Attribute.Constant("qux", "xyz")
+                        Attribute.String("foo", "bar"),
+                        Attribute.String("qux", "xyz")
                 ),
                 Condition.Greater<Attribute>(
-                        Attribute.Constant("abc", "ghi"),
-                        Attribute.Constant("def", "jkl")
+                        Attribute.String("abc", "ghi"),
+                        Attribute.String("def", "jkl")
                 )
-        )).toJSON() should beJSON("""
-            {"type":"or","conditions":[
-            {"type":"equal","rhs":"qux","lhs":"foo"},
-            {"type":"greater","rhs":"def","lhs":"abc"}]}
+        ).toJSON() should beJSON("""
+            {"type":"or",
+            "lhs":{"type":"equal","rhs":"qux","lhs":"foo"},
+            "rhs":{"type":"greater","rhs":"def","lhs":"abc"}}
         """)
     }
+})
 
+class RuleToJSONSpec : StringSpec({
     "always rule" {
         Rule.Always<Attribute>(Decision.Permit).toJSON() should beJSON("""
             {"type":"always","decision":"Permit"}
@@ -118,8 +128,8 @@ class ToJSONSpec : StringSpec({
     "when rule" {
         Rule.When<Attribute>(
                 Condition.Equal(
-                        Attribute.Constant("foo", "123"),
-                        Attribute.Constant("bar", "234")
+                        Attribute.String("foo", "123"),
+                        Attribute.String("bar", "234")
                 ),
                 Decision.Permit
         ).toJSON() should beJSON("""
@@ -131,8 +141,8 @@ class ToJSONSpec : StringSpec({
     "guard rule" {
         Rule.Guard<Attribute>(
                 Condition.Equal(
-                        Attribute.Constant("foo", "123"),
-                        Attribute.Constant("bar", "234")
+                        Attribute.String("foo", "123"),
+                        Attribute.String("bar", "234")
                 ),
                 Rule.Always(Decision.Permit)
         ).toJSON() should beJSON("""

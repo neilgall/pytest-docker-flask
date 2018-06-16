@@ -4,14 +4,18 @@ enum class RESTMethod {
     GET, PUT, POST, DELETE
 }
 
+typealias kString = kotlin.String
+
 sealed class Attribute {
-    abstract val name: String
-    data class Constant(override val name: String, val value: String): Attribute()
-    data class Request(override val name: String, val key: String): Attribute()
-    data class REST<A>(override val name: String, val url: String, val method: RESTMethod, val params: Map<String, A>): Attribute()
+    abstract val name: kString
+    data class String(override val name: kString, val value: kString): Attribute()
+    data class Number(override val name: kString, val value: Int): Attribute()
+    data class Request(override val name: kString, val key: kString): Attribute()
+    data class REST<A>(override val name: kString, val url: kString, val method: RESTMethod, val params: Map<kString, A>): Attribute()
 
     fun <A, B> map(f: (A) -> B): Attribute = when(this) {
-        is Constant -> this
+        is String -> this
+        is Number -> this
         is Request -> this
         is REST<*> -> REST(name, url, method, params.mapValues { f(it.value as A) })
     }
@@ -20,6 +24,11 @@ sealed class Attribute {
 enum class Decision {
     Permit, Deny, Undecided
 }
+
+data class QualifiedDecision(
+        val decision: Decision,
+        val reason: String?
+)
 
 sealed class Rule<A> {
     data class Always<A>(val decision: Decision): Rule<A>()
@@ -43,15 +52,15 @@ sealed class Rule<A> {
 
 sealed class Condition<A> {
     data class Not<A>(val condition: Condition<A>): Condition<A>()
-    data class And<A>(val conditions: List<Condition<A>>): Condition<A>()
-    data class Or<A>(val conditions: List<Condition<A>>): Condition<A>()
+    data class And<A>(val lhs: Condition<A>, val rhs: Condition<A>): Condition<A>()
+    data class Or<A>(val lhs: Condition<A>, val rhs: Condition<A>): Condition<A>()
     data class Equal<A>(val lhs: A, val rhs: A): Condition<A>()
     data class Greater<A>(val lhs: A, val rhs: A): Condition<A>()
 
     fun <B> map(f: (A) -> B): Condition<B> = when(this) {
         is Not -> Not(condition.map(f))
-        is And -> And(conditions.map { it.map(f) })
-        is Or -> Or(conditions.map { it.map(f) })
+        is And -> And(lhs.map(f), rhs.map(f))
+        is Or -> Or(lhs.map(f), rhs.map(f))
         is Equal -> Equal(f(lhs), f(rhs))
         is Greater -> Greater(f(lhs), f(rhs))
     }
