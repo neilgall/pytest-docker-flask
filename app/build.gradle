@@ -75,8 +75,13 @@ project(':engine') {
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
 
+    repositories {
+        jcenter()
+    }
+
     dependencies {
         compile("org.springframework.boot:spring-boot-starter-web")
+        compile("com.github.kittinunf.fuel:fuel:1.13.0")
         compile project(':common')
     }
 
