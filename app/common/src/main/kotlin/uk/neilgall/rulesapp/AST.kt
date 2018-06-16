@@ -48,10 +48,10 @@ enum class Decision {
 }
 
 sealed class Rule<A> {
+    data class Never<A>(val decision: Decision = Decision.Undecided): Rule<A>()
     data class Always<A>(val decision: Decision): Rule<A>()
-    data class Never<A>(val decision: Decision): Rule<A>()
     data class When<A>(val condition: Condition<A>, val decision: Decision): Rule<A>()
-    data class Guard<A>(val condition: Condition<A>, val rule: Rule<A>): Rule<A>()
+    data class Branch<A>(val condition: Condition<A>, val trueRule: Rule<A>, val falseRule: Rule<A>): Rule<A>()
     data class Majority<A>(val decision: Decision, val rules: List<Rule<A>>): Rule<A>()
     data class Any<A>(val decision: Decision, val rules: List<Rule<A>>): Rule<A>()
     data class All<A>(val decision: Decision, val rules: List<Rule<A>>): Rule<A>()
@@ -60,7 +60,7 @@ sealed class Rule<A> {
         is Always -> Always(decision)
         is Never -> Never(decision)
         is When -> When(condition.map(f), decision)
-        is Guard -> Guard(condition.map(f), rule.map(f))
+        is Branch -> Branch(condition.map(f), trueRule.map(f), falseRule.map(f))
         is Majority -> Majority(decision, rules.map { it.map(f) })
         is All -> All(decision, rules.map { it.map(f) })
         is Any -> Any(decision, rules.map { it.map(f) })

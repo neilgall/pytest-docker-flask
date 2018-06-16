@@ -32,9 +32,9 @@ fun Condition<Attribute>.reduce(r: Request): Boolean = when (this) {
 
 fun Rule<Attribute>.reduce(r: Request): Decision = when (this) {
     is Rule.Always -> decision
-    is Rule.Never -> decision
+    is Rule.Never -> Decision.Undecided
     is Rule.When -> if (condition.reduce(r)) decision else Decision.Undecided
-    is Rule.Guard -> if (condition.reduce(r)) rule.reduce(r) else Decision.Undecided
+    is Rule.Branch -> if (condition.reduce(r)) trueRule.reduce(r) else falseRule.reduce(r)
     is Rule.Majority -> {
         val reductions = rules.map { it.reduce(r) }
         val matches = reductions.filter { it == decision }

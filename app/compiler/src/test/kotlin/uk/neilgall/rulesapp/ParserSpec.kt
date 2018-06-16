@@ -118,8 +118,7 @@ class RuleParserSpec : StringSpec({
     }
 
     "never" {
-        parse(rule(), "never permit") shouldEqual Rule.Never<String>(Decision.Permit)
-        parse(rule(), "never deny") shouldEqual Rule.Never<String>(Decision.Deny)
+        parse(rule(), "never") shouldEqual Rule.Never<String>()
     }
 
     "when" {
@@ -133,9 +132,18 @@ class RuleParserSpec : StringSpec({
         )
     }
 
-    "guard" {
-        parse(rule(), "if \"abc\" = \"def\" always deny") shouldEqual Rule.Guard(
+    "one-leg branch" {
+        parse(rule(), "if \"abc\" = \"def\" always deny") shouldEqual Rule.Branch(
                 Condition.Equal(s("abc"), s("def")),
+                Rule.Always(Decision.Deny),
+                Rule.Never()
+        )
+    }
+
+    "two-leg branch" {
+        parse(rule(), "if 2 > 1 always permit else always deny") shouldEqual Rule.Branch(
+                Condition.Greater(n(2), n(1)),
+                Rule.Always(Decision.Permit),
                 Rule.Always(Decision.Deny)
         )
     }

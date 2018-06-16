@@ -96,10 +96,11 @@ fun Rule<Attribute>.toJSON(): JSONObject = JSONObject(when (this) {
             "condition" to condition.toJSON(),
             "decision" to decision.toJSON()
     )
-    is Rule.Guard -> mapOf(
-            "type" to "guard",
+    is Rule.Branch -> mapOf(
+            "type" to "branch",
             "condition" to condition.toJSON(),
-            "rule" to rule.toJSON()
+            "true" to trueRule.toJSON(),
+            "false" to falseRule.toJSON()
     )
     is Rule.Majority -> mapOf(
             "type" to "majority",

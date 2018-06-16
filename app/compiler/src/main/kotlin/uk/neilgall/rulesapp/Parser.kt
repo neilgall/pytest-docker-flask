@@ -156,7 +156,7 @@ internal val alwaysRule: Parser<Rule<String>> =
         token("always").next(decision).map { d -> Rule.Always<String>(d) }
 
 internal val neverRule: Parser<Rule<String>> =
-        token("never").next(decision).map { d -> Rule.Never<String>(d) }
+        token("never").retn(Rule.Never())
 
 internal val whenRule: Parser<Rule<String>> =
         sequence(
@@ -165,11 +165,12 @@ internal val whenRule: Parser<Rule<String>> =
                 { d, c -> Rule.When(c, d) }
         )
 
-internal val guardRule: Parser<Rule<String>> =
+internal val branchRule: Parser<Rule<String>> =
         sequence(
                 token("if").next(condition),
                 rule(),
-                { c, r -> Rule.Guard(c, r) }
+                (token("else").next(rule())).optional(Rule.Never()),
+                { c, tr, fr -> Rule.Branch(c, tr, fr) }
         )
 
 internal val majorityRule: Parser<Rule<String>> =
@@ -197,7 +198,7 @@ internal fun rule(): Parser<Rule<String>> = or(
         alwaysRule,
         neverRule,
         whenRule,
-        guardRule,
+        branchRule,
         majorityRule,
         allRule,
         anyRule

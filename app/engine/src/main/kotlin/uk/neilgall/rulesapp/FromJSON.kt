@@ -42,7 +42,7 @@ fun JSONObject.toRule(): Rule<String> = when (type()) {
     "always" -> Rule.Always(decision())
     "never" -> Rule.Never(decision())
     "when" -> Rule.When(getJSONObject("condition").toCondition(), decision())
-    "guard" -> Rule.Guard(getJSONObject("condition").toCondition(), getJSONObject("rule").toRule())
+    "branch" -> Rule.Branch(getJSONObject("condition").toCondition(), getJSONObject("true").toRule(), getJSONObject("false").toRule())
     "majority" -> Rule.Majority(decision(), getList("rules", JSONObject::toRule))
     "a;;" -> Rule.All(decision(), getList("rules", JSONObject::toRule))
     "any" -> Rule.Any(decision(), getList("rules", JSONObject::toRule))

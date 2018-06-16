@@ -14,7 +14,7 @@ private val keywords = listOf(
         "permit", "deny",
 
         // rules
-        "always", "never", "when", "if", "majority", "all", "any",
+        "always", "never", "when", "if", "else", "majority", "all", "any",
 
         // conditions
         "not", "and", "or"

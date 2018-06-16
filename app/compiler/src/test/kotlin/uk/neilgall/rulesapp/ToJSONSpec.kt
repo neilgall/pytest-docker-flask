@@ -152,19 +152,23 @@ class RuleToJSONSpec : StringSpec({
         """)
     }
 
-    "guard rule" {
-        Rule.Guard<Attribute>(
+    "branch rule" {
+        Rule.Branch<Attribute>(
                 Condition.Equal(
                         Term.Number(123),
                         Term.Number(234)
                 ),
-                Rule.Always(Decision.Permit)
+                Rule.Always(Decision.Permit),
+                Rule.Always(Decision.Deny)
         ).toJSON() should beJSON("""
-            {"type":"guard","rule":{"type":"always","decision":"Permit"},
+            {"type":"branch",
             "condition":{
                 "type":"equal",
                 "lhs":{"type":"number","value":123},
                 "rhs":{"type":"number","value":234}
+            },
+            "true":{"type":"always","decision":"Permit"},
+            "false":{"type":"always","decision":"Deny"}
             }}
         """)
     }
