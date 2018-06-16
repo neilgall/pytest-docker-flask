@@ -20,7 +20,7 @@ open class EngineController {
         return "ok"
     }
 
-    @RequestMapping("/execute", method = [RequestMethod.POST])
+    @RequestMapping("/query", method = [RequestMethod.POST])
     fun execute(@RequestBody attributes: Map<String, Any>): String {
         val request = attributes.mapValues { it.value.toString() }
         val results = ruleSet?.evaluate(request) ?: listOf()
