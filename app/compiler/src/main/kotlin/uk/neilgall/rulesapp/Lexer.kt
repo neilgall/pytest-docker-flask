@@ -21,7 +21,7 @@ private val keywords = listOf(
 )
 
 private val terminals: Terminals = Terminals
-        .operators("=", "!=", ">", ">=", "<", "<=", ",", ".")
+        .operators("=", "!=", ">", ">=", "<", "<=", ",", ".", "+", "-", "*", "/", "~=")
         .words(Scanners.IDENTIFIER)
         .caseInsensitiveKeywords(keywords)
         .build()

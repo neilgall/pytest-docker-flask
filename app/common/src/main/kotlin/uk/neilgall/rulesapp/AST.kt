@@ -21,15 +21,25 @@ sealed class Attribute {
     }
 }
 
+enum class Operator(val s: String) {
+    PLUS("+"),
+    MINUS("-"),
+    MULTIPLY("*"),
+    DIVIDE("/"),
+    REGEX("~=")
+}
+
 sealed class Term<A> {
     data class String<A>(val value: kString): Term<A>()
     data class Number<A>(val value: Int): Term<A>()
     data class Attribute<A>(val value: A): Term<A>()
+    data class Expr<A>(val lhs: Term<A>, val op: Operator, val rhs: Term<A>): Term<A>()
 
     fun <A, B> map(f: (A) -> B): Term<B> = when(this) {
         is String -> String(value)
         is Number -> Number(value)
         is Attribute -> Attribute(f(value as A))
+        is Expr -> Expr(lhs.map(f), op, rhs.map(f))
     }
 }
 

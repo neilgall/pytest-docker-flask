@@ -2,25 +2,6 @@ package uk.neilgall.rulesapp
 
 typealias Request = Map<String, String>
 
-sealed class Value {
-    data class String(val value: kotlin.String): Value() {
-        override fun equals(that: Value): Boolean = value == that.toString()
-        override operator fun compareTo(that: Value): Int = value.compareTo(that.toString())
-    }
-    data class Number(val value: Int): Value() {
-        override fun equals(that: Value): Boolean = when(that) {
-            is Number -> value == that.value
-            is String -> value == that.value.toInt()
-        }
-        override operator fun compareTo(that: Value): Int = when(that) {
-            is Number -> value.compareTo(that.value)
-            is String -> value.compareTo(that.value.toInt())
-        }
-    }
-    abstract fun equals(that: Value): Boolean
-    abstract operator fun compareTo(that: Value): Int
-}
-
 fun Attribute.reduce(r: Request): Value = when (this) {
     is Attribute.String -> Value.String(value)
     is Attribute.Number -> Value.Number(value)
@@ -32,6 +13,13 @@ fun Term<Attribute>.reduce(r: Request): Value = when (this) {
     is Term.String -> Value.String(value)
     is Term.Number -> Value.Number(value)
     is Term.Attribute -> value.reduce(r)
+    is Term.Expr -> when (op) {
+        Operator.PLUS -> lhs.reduce(r) + rhs.reduce(r)
+        Operator.MINUS -> lhs.reduce(r) - rhs.reduce(r)
+        Operator.MULTIPLY -> lhs.reduce(r) * rhs.reduce(r)
+        Operator.DIVIDE -> lhs.reduce(r) * rhs.reduce(r)
+        Operator.REGEX -> lhs.reduce(r).regexMatch(rhs.reduce(r))
+    }
 }
 
 fun Condition<Attribute>.reduce(r: Request): Boolean = when (this) {

@@ -26,7 +26,7 @@ fun JSONObject.toTerm(): Term<String> = when(type()) {
     "string" -> Term.String(getString("value"))
     "number" -> Term.Number(getInt("value"))
     "attribute" -> Term.Attribute(getString("name"))
-    else -> throw IllegalArgumentException("invalid Term '${toString()}'")
+    else -> Term.Expr(getJSONObject("lhs").toTerm(), Operator.valueOf(type()), getJSONObject("rhs").toTerm())
 }
 
 fun JSONObject.toCondition(): Condition<String> = when (type()) {

@@ -8,6 +8,15 @@ import org.jparsec.Terminals
 import java.util.function.BinaryOperator
 import java.util.function.UnaryOperator
 
+// Strange issue with Java/Kotlin lambdas+generics interop needs these adapters
+private fun <T> uop(t: String, f: (T) -> T): Parser<UnaryOperator<T>> = token(t).retn(object : UnaryOperator<T> {
+    override fun apply(t: T): T = f(t)
+})
+
+private fun <T> bop(t: String, f: (T, T) -> T): Parser<BinaryOperator<T>> = token(t).retn(object : BinaryOperator<T> {
+    override fun apply(t: T, u: T): T = f(t, u)
+})
+
 internal val quotedString: Parser<String> =
         Terminals.StringLiteral.PARSER.map { it.removeSurrounding("\"") }
 
@@ -76,11 +85,19 @@ internal val attribute: Parser<Attribute> = or(
         restAttribute
 )
 
-internal val term: Parser<Term<String>> = or(
+private val term_constant: Parser<Term<String>> = or(
         integer.map { n -> Term.Number<String>(n) },
         quotedString.map { s -> Term.String<kString>(s) },
         attributeName.map { a -> Term.Attribute<String>(a) }
 )
+
+internal val term: Parser<Term<String>> = OperatorTable<Term<String>>()
+        .infixl(bop("+", { lhs, rhs -> Term.Expr(lhs, Operator.PLUS, rhs) }), 20)
+        .infixl(bop("-", { lhs, rhs -> Term.Expr(lhs, Operator.MINUS, rhs) }), 20)
+        .infixl(bop("*", { lhs, rhs -> Term.Expr(lhs, Operator.MULTIPLY, rhs) }), 21)
+        .infixl(bop("/", { lhs, rhs -> Term.Expr(lhs, Operator.DIVIDE, rhs) }), 21)
+        .infixl(bop("~=", { lhs, rhs -> Term.Expr(lhs, Operator.REGEX, rhs) }), 22)
+        .build(term_constant)
 
 internal val decision: Parser<Decision> = or(
         token("permit").retn(Decision.Permit),
@@ -128,15 +145,6 @@ internal fun compareCondition(): Parser<Condition<String>> = or(
         greaterCondition,
         lessCondition
 )
-
-// Strange issue with Java/Kotlin lambdas+generics interop needs these adapters
-private fun <T> uop(t: String, f: (T) -> T): Parser<UnaryOperator<T>> = token(t).retn(object : UnaryOperator<T> {
-    override fun apply(t: T): T = f(t)
-})
-
-private fun <T> bop(t: String, f: (T, T) -> T): Parser<BinaryOperator<T>> = token(t).retn(object : BinaryOperator<T> {
-    override fun apply(t: T, u: T): T = f(t, u)
-})
 
 internal val condition = OperatorTable<Condition<String>>()
         .prefix(uop("not", { c -> Condition.Not(c) }), 11)

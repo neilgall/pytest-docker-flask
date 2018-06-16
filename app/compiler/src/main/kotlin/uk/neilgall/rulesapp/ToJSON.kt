@@ -46,6 +46,11 @@ fun Term<Attribute>.toJSON(): JSONObject = JSONObject(when (this) {
             "type" to "attribute",
             "name" to value.name
     )
+    is Term.Expr -> mapOf(
+            "type" to op.s,
+            "lhs" to lhs.toJSON(),
+            "rhs" to rhs.toJSON()
+    )
 })
 
 fun Decision.toJSON() = this.name

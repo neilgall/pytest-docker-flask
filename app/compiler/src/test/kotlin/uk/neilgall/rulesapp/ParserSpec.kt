@@ -7,6 +7,44 @@ private fun s(s: String) = Term.String<String>(s)
 private fun n(n: Int) = Term.Number<String>(n)
 private fun a(a: String) = Term.Attribute(a)
 
+class TermParserSpec : StringSpec({
+    "string" {
+        parse(term, "\"foo\"") shouldEqual Term.String<String>("foo")
+    }
+
+    "number" {
+        parse(term, "123") shouldEqual Term.Number<String>(123)
+    }
+
+    "attribute" {
+        parse(term, "foo") shouldEqual Term.Attribute("foo")
+    }
+
+    "plus expression" {
+        parse(term, "1 + 2") shouldEqual Term.Expr<String>(Term.Number(1), Operator.PLUS, Term.Number(2))
+    }
+
+    "minus expression" {
+        parse(term, "9 - 5") shouldEqual Term.Expr<String>(Term.Number(9), Operator.MINUS, Term.Number(5))
+    }
+
+    "times expression" {
+        parse(term, "foo * 7") shouldEqual Term.Expr(Term.Attribute("foo"), Operator.MULTIPLY, Term.Number(7))
+    }
+
+    "divide expression" {
+        parse(term, "100 / 5") shouldEqual Term.Expr<String>(Term.Number(100), Operator.DIVIDE, Term.Number(5))
+    }
+
+    "complex expression" {
+        parse(term, "3 + foo * 6") shouldEqual Term.Expr(
+                Term.Number(3),
+                Operator.PLUS,
+                Term.Expr(Term.Attribute("foo"), Operator.MULTIPLY, Term.Number(6))
+        )
+    }
+})
+
 class AttributeParserSpec : StringSpec({
     "attribute names" {
         parse(attributeName, "foo") shouldEqual "foo"
