@@ -53,11 +53,11 @@ class AttributeParserSpec : StringSpec({
     }
 
     "string constant" {
-        parse(attribute, "foo = string \"bar\"") shouldEqual Attribute.String("foo", "bar")
+        parse(attribute, "foo = \"bar\"") shouldEqual Attribute.String("foo", "bar")
     }
 
     "number constant" {
-        parse(attribute, "foo = number 123") shouldEqual Attribute.Number("foo", 123)
+        parse(attribute, "foo = 123") shouldEqual Attribute.Number("foo", 123)
     }
 
     "request attributes" {
@@ -168,7 +168,7 @@ class RuleSetParserSpec : StringSpec({
         val bar = Attribute.Request("bar", "bar")
 
         parse(ruleSet, """
-            foo = string "foo"
+            foo = "foo"
             bar = request "bar"
 
             any permit

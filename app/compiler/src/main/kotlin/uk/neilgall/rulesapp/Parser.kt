@@ -34,14 +34,14 @@ internal val attributeName: Parser<String> = or(
 internal val constantStringAttribute: Parser<Attribute> =
         sequence(
                 attributeName,
-                token("=").followedBy(token("string")).next(quotedString),
+                token("=").next(quotedString),
                 Attribute::String
         )
 
 internal val constantIntegerAttribute: Parser<Attribute> =
         sequence(
                 attributeName,
-                token("=").followedBy(token("number")).next(integer),
+                token("=").next(integer),
                 Attribute::Number
         )
 
