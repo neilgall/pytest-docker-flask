@@ -14,10 +14,8 @@ sealed class Attribute {
     data class REST<A>(override val name: kString, val url: kString, val method: RESTMethod, val params: Map<kString, A>): Attribute()
 
     fun <A, B> map(f: (A) -> B): Attribute = when(this) {
-        is String -> this
-        is Number -> this
-        is Request -> this
         is REST<*> -> REST(name, url, method, params.mapValues { f(it.value as A) })
+        else -> this
     }
 }
 
@@ -89,7 +87,6 @@ data class RuleSet<A>(
         val rules: List<Rule<A>>
 ) {
     fun <B> map(f: (A) -> B): RuleSet<B> =
-            RuleSet(attributes.map { it.map(f) }, rules.map { it.map(f) })
-
-    fun plusAttributes(attrs: List<Attribute>): RuleSet<A> = RuleSet(attributes + attrs, rules)
+            RuleSet(attributes.map { it.map(f) },
+                    rules.map { it.map(f) })
 }

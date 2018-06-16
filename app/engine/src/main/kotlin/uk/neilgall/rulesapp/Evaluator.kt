@@ -26,7 +26,7 @@ fun Condition<Attribute>.reduce(r: Request): Boolean = when (this) {
     is Condition.Not -> !condition.reduce(r)
     is Condition.And -> lhs.reduce(r) && rhs.reduce(r)
     is Condition.Or -> lhs.reduce(r) || rhs.reduce(r)
-    is Condition.Equal -> lhs.reduce(r) == rhs.reduce(r)
+    is Condition.Equal -> lhs.reduce(r).equals(rhs.reduce(r))
     is Condition.Greater -> lhs.reduce(r) > rhs.reduce(r)
 }
 

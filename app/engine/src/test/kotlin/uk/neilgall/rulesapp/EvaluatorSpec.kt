@@ -34,12 +34,21 @@ class ConditionEvaluatorSpec : StringSpec({
     "equals" {
         Condition.Equal<Attribute>(Term.Number(42), Term.Number(42)).reduce(mapOf()) shouldBe true
         Condition.Equal<Attribute>(Term.Number(42), Term.Number(43)).reduce(mapOf()) shouldBe false
-        Condition.Equal<Attribute>(Term.Number(42), Term.String("42")).reduce(mapOf()) shouldBe false
+    }
+
+    "equals with mismatched types" {
+        Condition.Equal<Attribute>(Term.Number(42), Term.String("42")).reduce(mapOf()) shouldBe true
+        Condition.Equal<Attribute>(Term.String("42"), Term.Number(42)).reduce(mapOf()) shouldBe true
     }
 
     "greater" {
-        Condition.Greater<Attribute>(Term.Number(42), Term.Number(9)).reduce(mapOf()) shouldBe true
+        Condition.Greater<Attribute>(Term.Number(42), Term.Number(5)).reduce(mapOf()) shouldBe true
         Condition.Greater<Attribute>(Term.Number(42), Term.Number(75)).reduce(mapOf()) shouldBe false
+    }
+
+    "greater with mismatched types" {
+        Condition.Greater<Attribute>(Term.Number(42), Term.String("5")).reduce(mapOf()) shouldBe true
+        Condition.Greater<Attribute>(Term.Number(42), Term.String("75")).reduce(mapOf()) shouldBe false
     }
 
     "not" {

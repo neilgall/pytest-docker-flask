@@ -25,6 +25,8 @@ sealed class Value {
             is String -> Value.String(Regex(that.value).find(value)?.value ?: "")
             else -> throw IllegalArgumentException()
         }
+
+        override fun toString(): kotlin.String = value
     }
 
     data class Number(val value: Int) : Value() {
@@ -59,6 +61,8 @@ sealed class Value {
         }
 
         override fun regexMatch(that: Value): Value = throw IllegalArgumentException()
+
+        override fun toString(): kotlin.String = value.toString()
     }
 
     abstract fun equals(that: Value): Boolean
