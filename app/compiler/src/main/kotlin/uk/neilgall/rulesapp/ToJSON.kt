@@ -33,6 +33,21 @@ fun Attribute.toJSON(): JSONObject = JSONObject(when (this) {
     )
 })
 
+fun Term<Attribute>.toJSON(): JSONObject = JSONObject(when (this) {
+    is Term.String -> mapOf(
+            "type" to "string",
+            "value" to value
+    )
+    is Term.Number -> mapOf(
+            "type" to "number",
+            "value" to value
+    )
+    is Term.Attribute -> mapOf(
+            "type" to "attribute",
+            "name" to value.name
+    )
+})
+
 fun Decision.toJSON() = this.name
 
 fun Condition<Attribute>.toJSON(): JSONObject = JSONObject(when (this) {
@@ -52,13 +67,13 @@ fun Condition<Attribute>.toJSON(): JSONObject = JSONObject(when (this) {
     )
     is Condition.Equal -> mapOf(
             "type" to "equal",
-            "lhs" to lhs.name,
-            "rhs" to rhs.name
+            "lhs" to lhs.toJSON(),
+            "rhs" to rhs.toJSON()
     )
     is Condition.Greater -> mapOf(
             "type" to "greater",
-            "lhs" to lhs.name,
-            "rhs" to rhs.name
+            "lhs" to lhs.toJSON(),
+            "rhs" to rhs.toJSON()
     )
 })
 

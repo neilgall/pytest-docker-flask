@@ -13,7 +13,8 @@ private fun JSONObject.type() = getString("type")
 private fun JSONObject.decision(key: String = "decision") = Decision.valueOf(getString(key))
 
 fun JSONObject.toAttribute(): Attribute = when (type()) {
-    "constant" -> Attribute.Constant(name(), getString("value"))
+    "string" -> Attribute.String(name(), getString("value"))
+    "number" -> Attribute.Number(name(), getInt("value"))
     "request" -> Attribute.Request(name(), getString("key"))
     "rest" -> Attribute.REST(name(), getString("url"),
             RESTMethod.valueOf(getString("method")),
@@ -21,12 +22,19 @@ fun JSONObject.toAttribute(): Attribute = when (type()) {
     else -> throw IllegalArgumentException("invalid Attribute '${toString()}'")
 }
 
+fun JSONObject.toTerm(): Term<String> = when(type()) {
+    "string" -> Term.String(getString("value"))
+    "number" -> Term.Number(getInt("value"))
+    "attribute" -> Term.Attribute(getString("name"))
+    else -> throw IllegalArgumentException("invalid Term '${toString()}'")
+}
+
 fun JSONObject.toCondition(): Condition<String> = when (type()) {
     "not" -> Condition.Not(getJSONObject("condition").toCondition())
-    "and" -> Condition.And(getList("conditions", JSONObject::toCondition))
-    "or" -> Condition.Or(getList("conditions", JSONObject::toCondition))
-    "equal" -> Condition.Equal(getString("lhs"), getString("rhs"))
-    "greater" -> Condition.Greater(getString("lhs"), getString("rhs"))
+    "and" -> Condition.And(getJSONObject("lhs").toCondition(), getJSONObject("rhs").toCondition())
+    "or" -> Condition.Or(getJSONObject("lhs").toCondition(), getJSONObject("rhs").toCondition())
+    "equal" -> Condition.Equal(getJSONObject("lhs").toTerm(), getJSONObject("rhs").toTerm())
+    "greater" -> Condition.Greater(getJSONObject("lhs").toTerm(), getJSONObject("rhs").toTerm())
     else -> throw IllegalArgumentException("Invalid Condition '${toString()}'")
 }
 

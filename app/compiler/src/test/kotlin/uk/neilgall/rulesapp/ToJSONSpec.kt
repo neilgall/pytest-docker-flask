@@ -50,64 +50,74 @@ class AttributeToJSONSpec : StringSpec({
 class ConditionToJSONSpec : StringSpec({
     "equals condition" {
         Condition.Equal<Attribute>(
-                Attribute.String("foo", "bar"),
-                Attribute.String("qux", "xyz")
+                Term.String("bar"),
+                Term.String("xyz")
         ).toJSON() should beJSON("""
-            {"type":"equal","rhs":"qux","lhs":"foo"}
+            {"type":"equal",
+            "lhs":{"type":"string","value":"bar"},
+            "rhs":{"type":"string","value":"xyz"}}
         """)
     }
 
     "greater condition" {
         Condition.Greater<Attribute>(
-                Attribute.String("foo", "bar"),
-                Attribute.String("qux", "xyz")
+                Term.Number(100),
+                Term.Number(99)
         ).toJSON() should beJSON("""
-            {"type":"greater","rhs":"qux","lhs":"foo"}
+            {"type":"greater",
+            "lhs":{"type":"number","value":100},
+            "rhs":{"type":"number","value":99}}
         """)
     }
 
     "not condition" {
         Condition.Not(
                 Condition.Equal<Attribute>(
-                        Attribute.String("foo", "bar"),
-                        Attribute.String("qux", "xyz")
+                        Term.Attribute(Attribute.String("foo", "bar")),
+                        Term.Attribute(Attribute.String("qux", "xyz"))
                 )
         ).toJSON() should beJSON("""
-            {"type":"not","condition":{"type":"equal","rhs":"qux","lhs":"foo"}}
+            {"type":"not","condition":{
+                "type":"equal",
+                "lhs":{"type":"attribute","name":"foo"},
+                "rhs":{"type":"attribute","name":"qux"}
+            }}
         """)
     }
 
     "and condition" {
-        Condition.And(
-                Condition.Equal<Attribute>(
-                        Attribute.String("foo", "bar"),
-                        Attribute.String("qux", "xyz")
+        Condition.And<Attribute>(
+                Condition.Equal(
+                        Term.String("foo"),
+                        Term.String("qux")
                 ),
-                Condition.Greater<Attribute>(
-                        Attribute.String("abc", "ghi"),
-                        Attribute.String("def", "jkl")
+                Condition.Greater(
+                        Term.Number(42),
+                        Term.Number(43)
                 )
         ).toJSON() should beJSON("""
             {"type":"and",
-            "lhs":{"type":"equal","rhs":"qux","lhs":"foo"},
-            "rhs":{"type":"greater","rhs":"def","lhs":"abc"}}
+            "lhs":{"type":"equal","lhs":{"type":"string","value":"foo"},"rhs":{"type":"string","value":"qux"}},
+            "rhs":{"type":"greater","lhs":{"type":"number","value":42},"rhs":{"type":"number","value":43}}
+            }
         """)
     }
 
     "or condition" {
-        Condition.Or(
-                Condition.Equal<Attribute>(
-                        Attribute.String("foo", "bar"),
-                        Attribute.String("qux", "xyz")
+        Condition.Or<Attribute>(
+                Condition.Equal(
+                        Term.String("foo"),
+                        Term.String("qux")
                 ),
-                Condition.Greater<Attribute>(
-                        Attribute.String("abc", "ghi"),
-                        Attribute.String("def", "jkl")
+                Condition.Greater(
+                        Term.Number(42),
+                        Term.Number(43)
                 )
         ).toJSON() should beJSON("""
             {"type":"or",
-            "lhs":{"type":"equal","rhs":"qux","lhs":"foo"},
-            "rhs":{"type":"greater","rhs":"def","lhs":"abc"}}
+            "lhs":{"type":"equal","lhs":{"type":"string","value":"foo"},"rhs":{"type":"string","value":"qux"}},
+            "rhs":{"type":"greater","lhs":{"type":"number","value":42},"rhs":{"type":"number","value":43}}
+            }
         """)
     }
 })
@@ -126,28 +136,36 @@ class RuleToJSONSpec : StringSpec({
     }
 
     "when rule" {
-        Rule.When<Attribute>(
-                Condition.Equal(
-                        Attribute.String("foo", "123"),
-                        Attribute.String("bar", "234")
+        Rule.When(
+                Condition.Equal<Attribute>(
+                        Term.Attribute(Attribute.Request("foo", "q")),
+                        Term.String("bar")
                 ),
                 Decision.Permit
         ).toJSON() should beJSON("""
             {"type":"when","decision":"Permit",
-            "condition":{"type":"equal","rhs":"bar","lhs":"foo"}}
+            "condition":{
+                "type":"equal",
+                "rhs":{"type":"string","value":"bar"},
+                "lhs":{"type":"attribute","name":"foo"}
+            }}
         """)
     }
 
     "guard rule" {
         Rule.Guard<Attribute>(
                 Condition.Equal(
-                        Attribute.String("foo", "123"),
-                        Attribute.String("bar", "234")
+                        Term.Number(123),
+                        Term.Number(234)
                 ),
                 Rule.Always(Decision.Permit)
         ).toJSON() should beJSON("""
             {"type":"guard","rule":{"type":"always","decision":"Permit"},
-            "condition":{"type":"equal","rhs":"bar","lhs":"foo"}}
+            "condition":{
+                "type":"equal",
+                "lhs":{"type":"number","value":123},
+                "rhs":{"type":"number","value":234}
+            }}
         """)
     }
 

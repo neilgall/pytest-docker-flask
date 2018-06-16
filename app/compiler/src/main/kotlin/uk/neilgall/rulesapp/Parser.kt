@@ -5,7 +5,6 @@ import org.jparsec.Parser
 import org.jparsec.Parsers.or
 import org.jparsec.Parsers.sequence
 import org.jparsec.Terminals
-import java.util.function.BiFunction
 import java.util.function.BinaryOperator
 import java.util.function.UnaryOperator
 
@@ -77,46 +76,43 @@ internal val attribute: Parser<Attribute> = or(
         restAttribute
 )
 
+internal val term: Parser<Term<String>> = or(
+        integer.map { n -> Term.Number<String>(n) },
+        quotedString.map { s -> Term.String<kString>(s) },
+        attributeName.map { a -> Term.Attribute<String>(a) }
+)
+
 internal val decision: Parser<Decision> = or(
         token("permit").retn(Decision.Permit),
         token("deny").retn(Decision.Deny)
 )
 
-//internal val notCondition: Parser<Condition<String>> =
-//        token("not").next(condition).map { c -> Condition.Not(c) }
-//
-//internal val andCondition: Parser<Condition<String>> =
-//        token("and").next(commaListOf(condition())).map { cs -> Condition.And(cs) }
-//
-//internal val orCondition: Parser<Condition<String>> =
-//        token("or").next(commaListOf(condition())).map { cs -> Condition.Or(cs) }
-
 internal val equalCondition: Parser<Condition<String>> =
         sequence(
-                attributeName,
-                token("=").next(attributeName),
-                { lhs: String, rhs: String -> Condition.Equal(lhs, rhs) }
+                term,
+                token("=").next(term),
+                { lhs, rhs -> Condition.Equal(lhs, rhs) }
         )
 
 internal val notEqualCondition: Parser<Condition<String>> =
         sequence(
-                attributeName,
-                token("!=").next(attributeName),
-                { lhs: String, rhs: String -> Condition.Not(Condition.Equal(lhs, rhs)) }
+                term,
+                token("!=").next(term),
+                { lhs, rhs -> Condition.Not(Condition.Equal(lhs, rhs)) }
         )
 
 internal val greaterCondition: Parser<Condition<String>> =
         sequence(
-                attributeName,
-                token(">").next(attributeName),
-                { lhs: String, rhs: String -> Condition.Greater(lhs, rhs) }
+                term,
+                token(">").next(term),
+                { lhs, rhs -> Condition.Greater(lhs, rhs) }
         )
 
 internal val lessCondition: Parser<Condition<String>> =
         sequence(
-                attributeName,
-                token("<").next(attributeName),
-                { lhs: String, rhs: String ->
+                term,
+                token("<").next(term),
+                { lhs, rhs ->
                     Condition.Not(
                             Condition.Or(
                                     Condition.Equal(lhs, rhs),
@@ -134,17 +130,17 @@ internal fun compareCondition(): Parser<Condition<String>> = or(
 )
 
 // Strange issue with Java/Kotlin lambdas+generics interop needs these adapters
-private fun <T> uop(t: String, f: (T) -> T): Parser<UnaryOperator<T>> = token(t).retn(object: UnaryOperator<T> {
+private fun <T> uop(t: String, f: (T) -> T): Parser<UnaryOperator<T>> = token(t).retn(object : UnaryOperator<T> {
     override fun apply(t: T): T = f(t)
 })
 
-private fun <T> bop(t: String, f: (T, T) -> T): Parser<BinaryOperator<T>> = token(t).retn(object: BinaryOperator<T> {
+private fun <T> bop(t: String, f: (T, T) -> T): Parser<BinaryOperator<T>> = token(t).retn(object : BinaryOperator<T> {
     override fun apply(t: T, u: T): T = f(t, u)
 })
 
 internal val condition = OperatorTable<Condition<String>>()
         .prefix(uop("not", { c -> Condition.Not(c) }), 11)
-        .infixl(bop("and", { l,r -> Condition.And(l, r) }), 10)
+        .infixl(bop("and", { l, r -> Condition.And(l, r) }), 10)
         .infixl(bop("or", { l, r -> Condition.Or(l, r) }), 9)
         .build(compareCondition())
 

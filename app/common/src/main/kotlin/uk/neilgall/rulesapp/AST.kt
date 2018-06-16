@@ -21,14 +21,21 @@ sealed class Attribute {
     }
 }
 
+sealed class Term<A> {
+    data class String<A>(val value: kString): Term<A>()
+    data class Number<A>(val value: Int): Term<A>()
+    data class Attribute<A>(val value: A): Term<A>()
+
+    fun <A, B> map(f: (A) -> B): Term<B> = when(this) {
+        is String -> String(value)
+        is Number -> Number(value)
+        is Attribute -> Attribute(f(value as A))
+    }
+}
+
 enum class Decision {
     Permit, Deny, Undecided
 }
-
-data class QualifiedDecision(
-        val decision: Decision,
-        val reason: String?
-)
 
 sealed class Rule<A> {
     data class Always<A>(val decision: Decision): Rule<A>()
@@ -54,15 +61,15 @@ sealed class Condition<A> {
     data class Not<A>(val condition: Condition<A>): Condition<A>()
     data class And<A>(val lhs: Condition<A>, val rhs: Condition<A>): Condition<A>()
     data class Or<A>(val lhs: Condition<A>, val rhs: Condition<A>): Condition<A>()
-    data class Equal<A>(val lhs: A, val rhs: A): Condition<A>()
-    data class Greater<A>(val lhs: A, val rhs: A): Condition<A>()
+    data class Equal<A>(val lhs: Term<A>, val rhs: Term<A>): Condition<A>()
+    data class Greater<A>(val lhs: Term<A>, val rhs: Term<A>): Condition<A>()
 
     fun <B> map(f: (A) -> B): Condition<B> = when(this) {
         is Not -> Not(condition.map(f))
         is And -> And(lhs.map(f), rhs.map(f))
         is Or -> Or(lhs.map(f), rhs.map(f))
-        is Equal -> Equal(f(lhs), f(rhs))
-        is Greater -> Greater(f(lhs), f(rhs))
+        is Equal -> Equal(lhs.map(f), rhs.map(f))
+        is Greater -> Greater(lhs.map(f), rhs.map(f))
     }
 
 }

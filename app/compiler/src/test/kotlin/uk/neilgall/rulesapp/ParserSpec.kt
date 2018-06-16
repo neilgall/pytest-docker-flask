@@ -3,6 +3,10 @@ package uk.neilgall.rulesapp
 import io.kotlintest.matchers.shouldEqual
 import io.kotlintest.specs.StringSpec
 
+private fun s(s: String) = Term.String<String>(s)
+private fun n(n: Int) = Term.Number<String>(n)
+private fun a(a: String) = Term.Attribute(a)
+
 class AttributeParserSpec : StringSpec({
     "attribute names" {
         parse(attributeName, "foo") shouldEqual "foo"
@@ -37,31 +41,31 @@ class DecisionParserSpec : StringSpec({
 
 class ConditionParserSpec : StringSpec({
     "equal" {
-        parse(condition, "foo = bar") shouldEqual Condition.Equal("foo", "bar")
+        parse(condition, "foo = bar") shouldEqual Condition.Equal(a("foo"), a("bar"))
     }
 
     "greater" {
-        parse(condition, "foo > bar") shouldEqual Condition.Greater("foo", "bar")
+        parse(condition, "foo > \"bar\"") shouldEqual Condition.Greater(a("foo"), s("bar"))
     }
 
     "not equal" {
-        parse(condition, "foo != bar") shouldEqual Condition.Not(Condition.Equal("foo", "bar"))
+        parse(condition, "99 != 99") shouldEqual Condition.Not(Condition.Equal(n(99), n(99)))
     }
 
     "less" {
         parse(condition, "foo < bar") shouldEqual Condition.Not(
-                Condition.Or(Condition.Equal("foo", "bar"), Condition.Greater("foo", "bar"))
+                Condition.Or(Condition.Equal(a("foo"), a("bar")), Condition.Greater(a("foo"), a("bar")))
         )
     }
 
     "not" {
-        parse(condition, "not a = b") shouldEqual Condition.Not(Condition.Equal("a", "b"))
+        parse(condition, "not a = b") shouldEqual Condition.Not(Condition.Equal(a("a"), a("b")))
     }
 
     "and" {
-        parse(condition, "foo = bar and qux = xyz") shouldEqual Condition.And(
-                Condition.Equal("foo", "bar"),
-                Condition.Equal("qux", "xyz")
+        parse(condition, "foo = 1 and bar = 2") shouldEqual Condition.And(
+                Condition.Equal(a("foo"), n(1)),
+                Condition.Equal(a("bar"), n(2))
         )
     }
 })
@@ -81,19 +85,19 @@ class RuleParserSpec : StringSpec({
     }
 
     "when" {
-        parse(rule(), "permit when abc = def") shouldEqual Rule.When(
-                Condition.Equal("abc", "def"),
+        parse(rule(), "permit when abc = \"def\"") shouldEqual Rule.When(
+                Condition.Equal(a("abc"), s("def")),
                 Decision.Permit
         )
-        parse(rule(), "deny when ghi > jkl") shouldEqual Rule.When(
-                Condition.Greater("ghi", "jkl"),
+        parse(rule(), "deny when 23 > 22") shouldEqual Rule.When(
+                Condition.Greater(n(23), n(22)),
                 Decision.Deny
         )
     }
 
     "guard" {
-        parse(rule(), "if abc = def always deny") shouldEqual Rule.Guard(
-                Condition.Equal("abc", "def"),
+        parse(rule(), "if \"abc\" = \"def\" always deny") shouldEqual Rule.Guard(
+                Condition.Equal(s("abc"), s("def")),
                 Rule.Always(Decision.Deny)
         )
     }
@@ -124,7 +128,6 @@ class RuleSetParserSpec : StringSpec({
     "ruleset" {
         val foo = Attribute.String("foo", "foo")
         val bar = Attribute.Request("bar", "bar")
-        val qux = Attribute.Number("const0", 123)
 
         parse(ruleSet, """
             foo = string "foo"
@@ -136,11 +139,14 @@ class RuleSetParserSpec : StringSpec({
                 .
 
             """).resolve() shouldEqual RuleSet(
-                listOf(foo, bar, qux),
+                // attributes
+                listOf(foo, bar),
+
+                // rules`
                 listOf(Rule.Any(Decision.Permit,
                         listOf(
-                                Rule.When(Condition.Equal(foo, bar), Decision.Permit),
-                                Rule.When(Condition.Equal(foo, qux), Decision.Permit)
+                                Rule.When(Condition.Equal<Attribute>(Term.Attribute(foo), Term.Attribute(bar)), Decision.Permit),
+                                Rule.When(Condition.Equal<Attribute>(Term.Attribute(foo), Term.Number(123)), Decision.Permit)
                         ) as List<Rule<Attribute>>)
                 ))
     }

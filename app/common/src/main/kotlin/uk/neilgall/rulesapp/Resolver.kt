@@ -6,14 +6,14 @@ fun RuleSet<String>.resolve(): RuleSet<Attribute> {
 
     fun lookup(name: String): Attribute {
         return attributesByName.getOrElse(name, {
-            if (name.startsWith("\"") && name.endsWith("\"")) {
-                // Promote quoted strings to constant attributes
-                val a = Attribute.String("const${dynamicAttributes.size}", name.removeSurrounding("\""))
-                dynamicAttributes.add(a)
-                a
-            } else{
+//            if (name.startsWith("\"") && name.endsWith("\"")) {
+//                // Promote quoted strings to constant attributes
+//                val a = Attribute.String("const${dynamicAttributes.size}", name.removeSurrounding("\""))
+//                dynamicAttributes.add(a)
+//                a
+//            } else{
                 throw NoSuchElementException(name)
-            }
+//            }
         })
     }
 

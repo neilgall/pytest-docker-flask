@@ -2,16 +2,42 @@ package uk.neilgall.rulesapp
 
 typealias Request = Map<String, String>
 
-fun Attribute.reduce(r: Request): String = when (this) {
-    is Attribute.Constant -> value
-    is Attribute.Request -> r[key] ?: throw NoSuchElementException("Missing parameter $key")
-    is Attribute.REST<*> -> doREST(url, method, params.mapValues { (it.value as Attribute).reduce(r) })
+sealed class Value {
+    data class String(val value: kotlin.String): Value() {
+        override fun equals(that: Value): Boolean = value == that.toString()
+        override operator fun compareTo(that: Value): Int = value.compareTo(that.toString())
+    }
+    data class Number(val value: Int): Value() {
+        override fun equals(that: Value): Boolean = when(that) {
+            is Number -> value == that.value
+            is String -> value == that.value.toInt()
+        }
+        override operator fun compareTo(that: Value): Int = when(that) {
+            is Number -> value.compareTo(that.value)
+            is String -> value.compareTo(that.value.toInt())
+        }
+    }
+    abstract fun equals(that: Value): Boolean
+    abstract operator fun compareTo(that: Value): Int
+}
+
+fun Attribute.reduce(r: Request): Value = when (this) {
+    is Attribute.String -> Value.String(value)
+    is Attribute.Number -> Value.Number(value)
+    is Attribute.Request -> Value.String(r[key] ?: throw NoSuchElementException("Missing parameter $key"))
+    is Attribute.REST<*> -> Value.String(doREST(url, method, params.mapValues { (it.value as Attribute).reduce(r) }))
+}
+
+fun Term<Attribute>.reduce(r: Request): Value = when (this) {
+    is Term.String -> Value.String(value)
+    is Term.Number -> Value.Number(value)
+    is Term.Attribute -> value.reduce(r)
 }
 
 fun Condition<Attribute>.reduce(r: Request): Boolean = when (this) {
     is Condition.Not -> !condition.reduce(r)
-    is Condition.And -> conditions.all { it.reduce(r) }
-    is Condition.Or -> conditions.any { it.reduce(r) }
+    is Condition.And -> lhs.reduce(r) && rhs.reduce(r)
+    is Condition.Or -> lhs.reduce(r) || rhs.reduce(r)
     is Condition.Equal -> lhs.reduce(r) == rhs.reduce(r)
     is Condition.Greater -> lhs.reduce(r) > rhs.reduce(r)
 }
