@@ -19,30 +19,14 @@ private fun beJSON(s: String) = object : Matcher<JSONObject> {
 
 class AttributeToJSONSpec : StringSpec({
     "string attribute" {
-        Attribute.String("foo", "bar").toJSON() should beJSON("""
-            {"type":"string","name":"foo","value":"bar"}
+        Attribute("foo", Term.String<String>("bar")).toJSON() should beJSON("""
+            {"name":"foo","value":{"type":"string","value":"bar"}}
         """)
     }
 
     "number attribute" {
-        Attribute.Number("foo", 132).toJSON() should beJSON("""
-            {"type":"number","name":"foo","value":132}
-        """)
-    }
-
-    "request attribute" {
-        Attribute.Request("foo", "bar").toJSON() should beJSON("""
-            {"type":"request","name":"foo","key":"bar"}
-        """)
-    }
-
-    "simple REST" {
-        Attribute.REST("foo",
-                "http://foo/bar/",
-                RESTMethod.PUT,
-                mapOf("abc" to "xyz")
-        ).toJSON() should beJSON("""
-            {"name":"foo","type":"rest","method":"PUT","params":{"abc":"xyz"},"url":"http://foo/bar/"}
+        Attribute("foo", Term.Number<String>(132)).toJSON() should beJSON("""
+            {"name":"foo","value":{"type":"number","value":132}}
         """)
     }
 })
@@ -73,14 +57,14 @@ class ConditionToJSONSpec : StringSpec({
     "not condition" {
         Condition.Not(
                 Condition.Equal<Attribute>(
-                        Term.Attribute(Attribute.String("foo", "bar")),
-                        Term.Attribute(Attribute.String("qux", "xyz"))
+                        Term.Number(123),
+                        Term.Number(234)
                 )
         ).toJSON() should beJSON("""
             {"type":"not","condition":{
                 "type":"equal",
-                "lhs":{"type":"attribute","name":"foo"},
-                "rhs":{"type":"attribute","name":"qux"}
+                "lhs":{"type":"number","value":123},
+                "rhs":{"type":"number","value":234}
             }}
         """)
     }
@@ -137,8 +121,8 @@ class RuleToJSONSpec : StringSpec({
 
     "when rule" {
         Rule.When(
-                Condition.Equal<Attribute>(
-                        Term.Attribute(Attribute.Request("foo", "q")),
+                Condition.Equal(
+                        Term.Attribute(Attribute("foo", Term.Request<Attribute>("q"))),
                         Term.String("bar")
                 ),
                 Decision.Permit

@@ -4,19 +4,15 @@ enum class RESTMethod {
     GET, PUT, POST, DELETE
 }
 
+enum class ValueType {
+    STRING, NUMBER, BOOLEAN
+}
+
 typealias kString = kotlin.String
 
-sealed class Attribute {
-    abstract val name: kString
-    data class String(override val name: kString, val value: kString): Attribute()
-    data class Number(override val name: kString, val value: Int): Attribute()
-    data class Request(override val name: kString, val key: kString): Attribute()
-    data class REST<A>(override val name: kString, val url: kString, val method: RESTMethod, val params: Map<kString, A>): Attribute()
-
-    fun <A, B> map(f: (A) -> B): Attribute = when(this) {
-        is REST<*> -> REST(name, url, method, params.mapValues { f(it.value as A) })
-        else -> this
-    }
+data class Attribute(val name: String, val value: Term<*>) {
+    fun <A, B> map(f: (A) -> B): Attribute =
+            Attribute(name, (value as Term<A>).map(f))
 }
 
 enum class Operator(val s: String) {
@@ -30,14 +26,20 @@ enum class Operator(val s: String) {
 sealed class Term<A> {
     data class String<A>(val value: kString): Term<A>()
     data class Number<A>(val value: Int): Term<A>()
+    data class Request<A>(val key: kString): Term<A>()
+    data class REST<A>(val url: kString, val method: RESTMethod, val params: Map<kString, A>): Term<A>()
     data class Attribute<A>(val value: A): Term<A>()
     data class Expr<A>(val lhs: Term<A>, val op: Operator, val rhs: Term<A>): Term<A>()
+    data class Coerce<A>(val value: Term<A>, val toType: ValueType): Term<A>()
 
     fun <A, B> map(f: (A) -> B): Term<B> = when(this) {
         is String -> String(value)
         is Number -> Number(value)
+        is Request -> Request(key)
+        is REST<*> -> REST(url, method, params.mapValues{ f(it.value as A) })
         is Attribute -> Attribute(f(value as A))
         is Expr -> Expr(lhs.map(f), op, rhs.map(f))
+        is Coerce -> Coerce(value.map(f), toType)
     }
 }
 

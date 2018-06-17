@@ -12,20 +12,18 @@ private fun JSONObject.name() = getString("name")
 private fun JSONObject.type() = getString("type")
 private fun JSONObject.decision(key: String = "decision") = Decision.valueOf(getString(key))
 
-fun JSONObject.toAttribute(): Attribute = when (type()) {
-    "string" -> Attribute.String(name(), getString("value"))
-    "number" -> Attribute.Number(name(), getInt("value"))
-    "request" -> Attribute.Request(name(), getString("key"))
-    "rest" -> Attribute.REST(name(), getString("url"),
-            RESTMethod.valueOf(getString("method")),
-            getMap("params", { it as String }))
-    else -> throw IllegalArgumentException("invalid Attribute '${toString()}'")
-}
+fun JSONObject.toAttribute(): Attribute =
+        Attribute(name(), getJSONObject("value").toTerm())
 
 fun JSONObject.toTerm(): Term<String> = when(type()) {
     "string" -> Term.String(getString("value"))
     "number" -> Term.Number(getInt("value"))
     "attribute" -> Term.Attribute(getString("name"))
+    "request" -> Term.Request(getString("key"))
+    "rest" -> Term.REST(getString("url"),
+            RESTMethod.valueOf(getString("method")),
+            getMap("params", { it as String }))
+    "coerce" -> Term.Coerce(getJSONObject("from").toTerm(), ValueType.valueOf(getString("to")))
     else -> Term.Expr(getJSONObject("lhs").toTerm(), Operator.valueOf(type()), getJSONObject("rhs").toTerm())
 }
 

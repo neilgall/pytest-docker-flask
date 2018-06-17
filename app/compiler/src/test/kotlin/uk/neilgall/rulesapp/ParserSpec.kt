@@ -43,6 +43,19 @@ class TermParserSpec : StringSpec({
                 Term.Expr(Term.Attribute("foo"), Operator.MULTIPLY, Term.Number(6))
         )
     }
+
+    "coercion" {
+        parse(term, "string 3") shouldEqual Term.Coerce<String>(Term.Number(3), ValueType.STRING)
+    }
+
+    "request term" {
+        parse(term, "request \"A.B.C\"") shouldEqual Term.Request<String>("A.B.C")
+    }
+
+    "rest term" {
+        parse(term, "GET \"http://foo.bar\" user=UserName, pass=Password") shouldEqual
+                Term.REST("http://foo.bar", RESTMethod.GET, mapOf("user" to "UserName", "pass" to "Password"))
+    }
 })
 
 class AttributeParserSpec : StringSpec({
@@ -53,20 +66,11 @@ class AttributeParserSpec : StringSpec({
     }
 
     "string constant" {
-        parse(attribute, "foo = \"bar\"") shouldEqual Attribute.String("foo", "bar")
+        parse(attribute, "foo = \"bar\"") shouldEqual Attribute("foo", Term.String<String>("bar"))
     }
 
     "number constant" {
-        parse(attribute, "foo = 123") shouldEqual Attribute.Number("foo", 123)
-    }
-
-    "request attributes" {
-        parse(attribute, "foo = request \"A.B.C\"") shouldEqual Attribute.Request("foo", "A.B.C")
-    }
-
-    "rest attributes" {
-        parse(attribute, "foo = rest GET \"http://foo.bar\" user=UserName, pass=Password") shouldEqual
-                Attribute.REST("foo", "http://foo.bar", RESTMethod.GET, mapOf("user" to "UserName", "pass" to "Password"))
+        parse(attribute, "foo = 123") shouldEqual Attribute("foo", Term.Number<String>(123))
     }
 })
 
@@ -91,9 +95,7 @@ class ConditionParserSpec : StringSpec({
     }
 
     "less" {
-        parse(condition, "foo < bar") shouldEqual Condition.Not(
-                Condition.Or(Condition.Equal(a("foo"), a("bar")), Condition.Greater(a("foo"), a("bar")))
-        )
+        parse(condition, "foo < bar") shouldEqual Condition.Greater(a("bar"), a("foo"))
     }
 
     "not" {
@@ -172,8 +174,8 @@ class RuleParserSpec : StringSpec({
 
 class RuleSetParserSpec : StringSpec({
     "ruleset" {
-        val foo = Attribute.String("foo", "foo")
-        val bar = Attribute.Request("bar", "bar")
+        val foo = Attribute("foo", Term.String<Attribute>("foo"))
+        val bar = Attribute("bar", Term.Request<Attribute>("bar"))
 
         parse(ruleSet, """
             foo = "foo"
@@ -191,8 +193,8 @@ class RuleSetParserSpec : StringSpec({
                 // rules`
                 listOf(Rule.Any(Decision.Permit,
                         listOf(
-                                Rule.When(Condition.Equal<Attribute>(Term.Attribute(foo), Term.Attribute(bar)), Decision.Permit),
-                                Rule.When(Condition.Equal<Attribute>(Term.Attribute(foo), Term.Number(123)), Decision.Permit)
+                                Rule.When(Condition.Equal(Term.Attribute(foo), Term.Attribute(bar)), Decision.Permit),
+                                Rule.When(Condition.Equal(Term.Attribute(foo), Term.Number(123)), Decision.Permit)
                         ) as List<Rule<Attribute>>)
                 ))
     }

@@ -14,15 +14,15 @@ class TermEvaluatorSpec : StringSpec({
     }
 
     "string attribute" {
-        Term.Attribute<Attribute>(Attribute.String("foo", "bar")).reduce(mapOf()) shouldEqual Value.String("bar")
+        Term.Attribute(Attribute("foo", Term.String<Attribute>("bar"))).reduce(mapOf()) shouldEqual Value.String("bar")
     }
 
     "number attribute" {
-        Term.Attribute<Attribute>(Attribute.Number("qux", 42)).reduce(mapOf()) shouldEqual Value.Number(42)
+        Term.Attribute(Attribute("qux", Term.Number<Attribute>(42))).reduce(mapOf()) shouldEqual Value.Number(42)
     }
 
     "request attribute" {
-        Term.Attribute<Attribute>(Attribute.Request("foo", "xyz")).reduce(mapOf("xyz" to "42")) shouldEqual Value.String("42")
+        Term.Attribute(Attribute("foo", Term.Request<Attribute>("xyz"))).reduce(mapOf("xyz" to "42")) shouldEqual Value.String("42")
     }
 
     "arithmetic" {

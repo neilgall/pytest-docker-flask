@@ -1,5 +1,7 @@
 package uk.neilgall.rulesapp
 
+import javafx.scene.chart.NumberAxisBuilder
+
 sealed class Value {
     data class String(val value: kotlin.String) : Value() {
         override fun equals(that: Value): Boolean = when (that) {
@@ -24,6 +26,12 @@ sealed class Value {
         override fun regexMatch(that: Value): Value = when (that) {
             is String -> Value.String(Regex(that.value).find(value)?.value ?: "")
             else -> throw IllegalArgumentException()
+        }
+
+        override fun coerce(toType: ValueType): Value = when (toType) {
+            ValueType.STRING -> this
+            ValueType.NUMBER -> Value.Number(value.toInt())
+            ValueType.BOOLEAN -> Value.Number(value.toInt()) //TODO
         }
 
         override fun toString(): kotlin.String = value
@@ -60,6 +68,12 @@ sealed class Value {
             is String -> Value.Number(value / that.value.toInt())
         }
 
+        override fun coerce(toType: ValueType): Value = when (toType) {
+            ValueType.STRING -> Value.String(value.toString())
+            ValueType.NUMBER -> this
+            ValueType.BOOLEAN -> this //TODO
+        }
+
         override fun regexMatch(that: Value): Value = throw IllegalArgumentException()
 
         override fun toString(): kotlin.String = value.toString()
@@ -72,4 +86,5 @@ sealed class Value {
     abstract operator fun times(that: Value): Value
     abstract operator fun div(that: Value): Value
     abstract fun regexMatch(that: Value): Value
+    abstract fun coerce(toType: ValueType): Value
 }

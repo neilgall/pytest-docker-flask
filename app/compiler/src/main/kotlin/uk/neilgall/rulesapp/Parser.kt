@@ -31,26 +31,8 @@ internal val attributeName: Parser<String> = or(
         Terminals.StringLiteral.PARSER
 )
 
-internal val constantStringAttribute: Parser<Attribute> =
-        sequence(
-                attributeName,
-                token("=").next(quotedString),
-                Attribute::String
-        )
-
-internal val constantIntegerAttribute: Parser<Attribute> =
-        sequence(
-                attributeName,
-                token("=").next(integer),
-                Attribute::Number
-        )
-
-internal val requestAttribute: Parser<Attribute> =
-        sequence(
-                attributeName,
-                token("=").followedBy(token("request")).next(quotedString),
-                Attribute::Request
-        )
+internal val requestTerm: Parser<Term<String>> =
+        token("request").next(quotedString).map { k -> Term.Request<String>(k) }
 
 internal val restMethod = or(
         token("GET").retn(RESTMethod.GET),
@@ -69,26 +51,19 @@ internal val restParam: Parser<Pair<String, String>> =
 internal val restParams: Parser<Map<String, String>> =
         restParam.sepBy(token(",")).map { it.associate { it } }
 
-internal val restAttribute: Parser<Attribute> =
+internal val restTerm: Parser<Term<String>> =
         sequence(
-                attributeName,
-                token("=").followedBy(token("rest")).next(restMethod),
+                restMethod,
                 quotedString,
                 restParams,
-                { n: String, m: RESTMethod, u: String, p: Map<String, String> -> Attribute.REST(n, u, m, p) }
+                { m: RESTMethod, u: String, p: Map<String, String> -> Term.REST(u, m, p) }
         )
-
-internal val attribute: Parser<Attribute> = or(
-        constantIntegerAttribute,
-        constantStringAttribute,
-        requestAttribute,
-        restAttribute
-)
-
-private val term_constant: Parser<Term<String>> = or(
+private val termConstant: Parser<Term<String>> = or(
         integer.map { n -> Term.Number<String>(n) },
         quotedString.map { s -> Term.String<kString>(s) },
-        attributeName.map { a -> Term.Attribute<String>(a) }
+        attributeName.map { a -> Term.Attribute<String>(a) },
+        requestTerm,
+        restTerm
 )
 
 internal val term: Parser<Term<String>> = OperatorTable<Term<String>>()
@@ -97,7 +72,19 @@ internal val term: Parser<Term<String>> = OperatorTable<Term<String>>()
         .infixl(bop("*", { lhs, rhs -> Term.Expr(lhs, Operator.MULTIPLY, rhs) }), 21)
         .infixl(bop("/", { lhs, rhs -> Term.Expr(lhs, Operator.DIVIDE, rhs) }), 21)
         .infixl(bop("~=", { lhs, rhs -> Term.Expr(lhs, Operator.REGEX, rhs) }), 22)
-        .build(term_constant)
+        .prefix(uop("string", { term -> Term.Coerce(term, ValueType.STRING) }), 1)
+        .prefix(uop("number", { term -> Term.Coerce(term, ValueType.NUMBER) }), 1)
+        .prefix(uop("boolean", { term -> Term.Coerce(term, ValueType.BOOLEAN) }), 1)
+        .build(termConstant)
+
+private fun _term() = term
+
+internal val attribute: Parser<Attribute> =
+        sequence(
+                attributeName,
+                token("=").next(_term()),
+                { name, value -> Attribute(name, value) }
+        )
 
 internal val decision: Parser<Decision> = or(
         token("permit").retn(Decision.Permit),

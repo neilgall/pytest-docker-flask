@@ -4,8 +4,11 @@ import org.jparsec.*
 import org.jparsec.Parsers.or
 
 private val keywords = listOf(
-        // attribute types
-        "string", "number", "request", "rest",
+        // type names
+        "string", "number", "boolean",
+
+        // term keywords
+        "request", "rest",
 
         // rest methods
         "GET", "PUT", "POST", "DELETE",

@@ -3,35 +3,10 @@ package uk.neilgall.rulesapp
 import org.json.JSONArray
 import org.json.JSONObject
 
-private fun attributeToName(attr: Any?): String = when (attr) {
-    is Attribute -> attr.name
-    else -> attr.toString()
-}
-
-fun Attribute.toJSON(): JSONObject = JSONObject(when (this) {
-    is Attribute.String -> mapOf(
-            "type" to "string",
-            "name" to name,
-            "value" to value
-    )
-    is Attribute.Number -> mapOf(
-            "type" to "number",
-            "name" to name,
-            "value" to value
-    )
-    is Attribute.Request -> mapOf(
-            "type" to "request",
-            "name" to name,
-            "key" to key
-    )
-    is Attribute.REST<*> -> mapOf(
-            "type" to "rest",
-            "name" to name,
-            "url" to url,
-            "method" to method.name,
-            "params" to JSONObject(params.mapValues { attributeToName(it.value) })
-    )
-})
+fun Attribute.toJSON(): JSONObject = JSONObject(mapOf(
+        "name" to name,
+        "value" to (value as Term<Attribute>).toJSON()
+))
 
 fun Term<Attribute>.toJSON(): JSONObject = JSONObject(when (this) {
     is Term.String -> mapOf(
@@ -50,6 +25,21 @@ fun Term<Attribute>.toJSON(): JSONObject = JSONObject(when (this) {
             "type" to op.s,
             "lhs" to lhs.toJSON(),
             "rhs" to rhs.toJSON()
+    )
+    is Term.Coerce -> mapOf(
+            "type" to "coerce",
+            "from" to value.toJSON(),
+            "to" to toType.name
+    )
+    is Term.Request -> mapOf(
+            "type" to "request",
+            "key" to key
+    )
+    is Term.REST<*> -> mapOf(
+            "type" to "rest",
+            "method" to method.name,
+            "url" to url,
+            "params" to JSONObject(params.mapValues { (it.value as Attribute).name })
     )
 })
 
