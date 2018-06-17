@@ -129,14 +129,7 @@ internal val lessCondition: Parser<Condition<String>> =
         sequence(
                 term,
                 token("<").next(term),
-                { lhs, rhs ->
-                    Condition.Not(
-                            Condition.Or(
-                                    Condition.Equal(lhs, rhs),
-                                    Condition.Greater(lhs, rhs)
-                            )
-                    )
-                }
+                { lhs, rhs -> Condition.Greater(rhs, lhs) }
         )
 
 internal fun compareCondition(): Parser<Condition<String>> = or(
