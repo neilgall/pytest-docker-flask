@@ -55,6 +55,7 @@ sealed class Rule<A> {
     data class Majority<A>(val decision: Decision, val rules: List<Rule<A>>): Rule<A>()
     data class Any<A>(val decision: Decision, val rules: List<Rule<A>>): Rule<A>()
     data class All<A>(val decision: Decision, val rules: List<Rule<A>>): Rule<A>()
+    data class OneOf<A>(val rules: List<Rule<A>>): Rule<A>()
 
     fun <B> map(f: (A) -> B): Rule<B> = when(this) {
         is Always -> Always(decision)
@@ -64,6 +65,7 @@ sealed class Rule<A> {
         is Majority -> Majority(decision, rules.map { it.map(f) })
         is All -> All(decision, rules.map { it.map(f) })
         is Any -> Any(decision, rules.map { it.map(f) })
+        is OneOf -> OneOf(rules.map { it.map(f) })
     }
 }
 

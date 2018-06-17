@@ -42,8 +42,9 @@ fun JSONObject.toRule(): Rule<String> = when (type()) {
     "when" -> Rule.When(getJSONObject("condition").toCondition(), decision())
     "branch" -> Rule.Branch(getJSONObject("condition").toCondition(), getJSONObject("true").toRule(), getJSONObject("false").toRule())
     "majority" -> Rule.Majority(decision(), getList("rules", JSONObject::toRule))
-    "a;;" -> Rule.All(decision(), getList("rules", JSONObject::toRule))
+    "all" -> Rule.All(decision(), getList("rules", JSONObject::toRule))
     "any" -> Rule.Any(decision(), getList("rules", JSONObject::toRule))
+    "one-of" -> Rule.OneOf(getList("rules", JSONObject::toRule))
     else -> throw IllegalArgumentException("Invalid Rule '${toString()}'")
 }
 

@@ -83,6 +83,11 @@ fun Rule<Attribute>.reduce(r: Request): Eval<Decision> = when (this) {
     }
     is Rule.All -> Eval(if (rules.all { it.reduce(r).t == decision }) decision else Decision.Undecided)
     is Rule.Any -> Eval(if (rules.any { it.reduce(r).t == decision }) decision else Decision.Undecided)
+    is Rule.OneOf -> {
+        val reductions = rules.map { it.reduce(r) }
+        val decided = reductions.filter { it.t != Decision.Undecided }
+        if (decided.size == 1) decided[0] else Eval(Decision.Undecided)
+    }
 }
 
 fun Eval<*>.toMap(): Map<String, *> =

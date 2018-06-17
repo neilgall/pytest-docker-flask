@@ -23,8 +23,8 @@ internal val quotedString: Parser<String> =
 internal val integer: Parser<Int> =
         Terminals.IntegerLiteral.PARSER.map(String::toInt)
 
-internal fun <T> commaListOf(p: Parser<T>): Parser<List<T>> =
-        p.sepBy1(token(",")).followedBy(token("."))
+private fun <T> listBlock(p: Parser<T>): Parser<List<T>> =
+        p.sepBy1(token(",")).between(token("{"), token("}"))
 
 internal val attributeName: Parser<String> = or(
         Terminals.Identifier.PARSER,
@@ -119,11 +119,27 @@ internal val lessCondition: Parser<Condition<String>> =
                 { lhs, rhs -> Condition.Greater(rhs, lhs) }
         )
 
+internal val greaterOrEqualCondition: Parser<Condition<String>> =
+        sequence(
+                term,
+                token(">=").next(term),
+                { lhs, rhs -> Condition.Or(Condition.Equal(lhs, rhs), Condition.Greater(lhs, rhs)) }
+        )
+
+internal val lessOrEqualCondition: Parser<Condition<String>> =
+        sequence(
+                term,
+                token("<=").next(term),
+                { lhs, rhs -> Condition.Or(Condition.Equal(lhs, rhs), Condition.Greater(rhs, lhs)) }
+        )
+
 internal fun compareCondition(): Parser<Condition<String>> = or(
         equalCondition,
         notEqualCondition,
         greaterCondition,
-        lessCondition
+        lessCondition,
+        greaterOrEqualCondition,
+        lessOrEqualCondition
 )
 
 internal val condition = OperatorTable<Condition<String>>()
@@ -156,23 +172,26 @@ internal val branchRule: Parser<Rule<String>> =
 internal val majorityRule: Parser<Rule<String>> =
         sequence(
                 token("majority").next(decision),
-                commaListOf(rule()),
+                listBlock(rule()),
                 { d, rs -> Rule.Majority(d, rs) }
         )
 
 internal val allRule: Parser<Rule<String>> =
         sequence(
                 token("all").next(decision),
-                commaListOf(rule()),
+                listBlock(rule()),
                 { d, rs -> Rule.All(d, rs) }
         )
 
 internal val anyRule: Parser<Rule<String>> =
         sequence(
                 token("any").next(decision),
-                commaListOf(rule()),
+                listBlock(rule()),
                 { d, rs -> Rule.Any(d, rs) }
         )
+
+internal val exclusiveRule: Parser<Rule<String>> =
+        token("exclusive").next(listBlock(rule())).map { rs -> Rule.OneOf(rs) }
 
 internal fun rule(): Parser<Rule<String>> = or(
         alwaysRule,
@@ -181,7 +200,8 @@ internal fun rule(): Parser<Rule<String>> = or(
         branchRule,
         majorityRule,
         allRule,
-        anyRule
+        anyRule,
+        exclusiveRule
 )
 
 val ruleSet: Parser<RuleSet<String>> =

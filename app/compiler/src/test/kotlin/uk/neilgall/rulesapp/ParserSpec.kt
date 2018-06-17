@@ -151,23 +151,53 @@ class RuleParserSpec : StringSpec({
     }
 
     "majority" {
-        parse(rule(), "majority permit always permit, always deny.") shouldEqual Rule.Majority(
+        parse(rule(), "majority permit { always permit, always deny }") shouldEqual Rule.Majority(
                 Decision.Permit,
                 listOf(Rule.Always(Decision.Permit), Rule.Always<String>(Decision.Deny))
         )
     }
 
     "any" {
-        parse(rule(), "any permit always permit, always deny.") shouldEqual Rule.Any(
+        parse(rule(), "any permit { always permit, always deny }") shouldEqual Rule.Any(
                 Decision.Permit,
                 listOf(Rule.Always(Decision.Permit), Rule.Always<String>(Decision.Deny))
         )
     }
 
     "all" {
-        parse(rule(), "all deny always permit, always deny.") shouldEqual Rule.All(
+        parse(rule(), "all deny { always permit, always deny }") shouldEqual Rule.All(
                 Decision.Deny,
                 listOf(Rule.Always(Decision.Permit), Rule.Always<String>(Decision.Deny))
+        )
+    }
+
+    "exclusive" {
+        parse(rule(), "exclusive { always permit, deny when a = b }") shouldEqual Rule.OneOf(
+                listOf(Rule.Always(Decision.Permit),
+                        Rule.When(Condition.Equal(Term.Attribute("a"), Term.Attribute("b")), Decision.Deny)
+                )
+        )
+    }
+
+    "complex rule" {
+        parse(rule(), """
+            if foo = "bar"
+              exclusive {
+                permit when a > b,
+                deny when a <= b
+              }
+            else
+              always deny
+        """) shouldEqual Rule.Branch(
+                Condition.Equal(Term.Attribute("foo"), Term.String("bar")),
+                Rule.OneOf(listOf(
+                        Rule.When(Condition.Greater(Term.Attribute("a"), Term.Attribute("b")), Decision.Permit),
+                        Rule.When(Condition.Or(
+                                Condition.Equal(Term.Attribute("a"), Term.Attribute("b")),
+                                Condition.Greater(Term.Attribute("b"), Term.Attribute("a"))
+                        ), Decision.Deny)
+                )),
+                Rule.Always(Decision.Deny)
         )
     }
 })
@@ -181,10 +211,10 @@ class RuleSetParserSpec : StringSpec({
             foo = "foo"
             bar = request "bar"
 
-            any permit
+            any permit {
                 permit when foo = bar,
                 permit when foo = 123
-                .
+            }
 
             """).resolve() shouldEqual RuleSet(
                 // attributes

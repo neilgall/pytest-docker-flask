@@ -17,14 +17,14 @@ private val keywords = listOf(
         "permit", "deny",
 
         // rules
-        "always", "never", "when", "if", "else", "majority", "all", "any",
+        "always", "never", "when", "if", "else", "majority", "all", "any", "exclusive",
 
         // conditions
         "not", "and", "or"
 )
 
 private val terminals: Terminals = Terminals
-        .operators("=", "!=", ">", ">=", "<", "<=", ",", ".", "+", "-", "*", "/", "~=")
+        .operators("=", "!=", ">", ">=", "<", "<=", "{", "}", "+", "-", "*", "/", "~=", ",")
         .words(Scanners.IDENTIFIER)
         .caseInsensitiveKeywords(keywords)
         .build()

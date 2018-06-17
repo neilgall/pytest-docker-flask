@@ -107,6 +107,10 @@ fun Rule<Attribute>.toJSON(): JSONObject = JSONObject(when (this) {
             "decision" to decision.toJSON(),
             "rules" to JSONArray(rules.map { it.toJSON() })
     )
+    is Rule.OneOf -> mapOf(
+            "type" to "one-of",
+            "rules" to JSONArray(rules.map { it.toJSON() })
+    )
 })
 
 fun RuleSet<Attribute>.toJSON(): JSONObject = JSONObject(mapOf(
