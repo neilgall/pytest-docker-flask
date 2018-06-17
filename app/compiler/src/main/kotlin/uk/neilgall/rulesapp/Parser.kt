@@ -77,12 +77,10 @@ internal val term: Parser<Term<String>> = OperatorTable<Term<String>>()
         .prefix(uop("boolean", { term -> Term.Coerce(term, ValueType.BOOLEAN) }), 1)
         .build(termConstant)
 
-private fun _term() = term
-
 internal val attribute: Parser<Attribute> =
         sequence(
                 attributeName,
-                token("=").next(_term()),
+                token("=").next(term),
                 { name, value -> Attribute(name, value) }
         )
 
@@ -148,6 +146,8 @@ internal val condition = OperatorTable<Condition<String>>()
         .infixl(bop("or", { l, r -> Condition.Or(l, r) }), 9)
         .build(compareCondition())
 
+private val ruleRef = Parser.newReference<Rule<String>>()
+
 internal val alwaysRule: Parser<Rule<String>> =
         token("always").next(decision).map { d -> Rule.Always<String>(d) }
 
@@ -164,36 +164,36 @@ internal val whenRule: Parser<Rule<String>> =
 internal val branchRule: Parser<Rule<String>> =
         sequence(
                 token("if").next(condition),
-                rule(),
-                (token("else").next(rule())).optional(Rule.Never()),
+                ruleRef.lazy(),
+                (token("else").next(ruleRef.lazy())).optional(Rule.Never()),
                 { c, tr, fr -> Rule.Branch(c, tr, fr) }
         )
 
 internal val majorityRule: Parser<Rule<String>> =
         sequence(
                 token("majority").next(decision),
-                listBlock(rule()),
+                listBlock(ruleRef.lazy()),
                 { d, rs -> Rule.Majority(d, rs) }
         )
 
 internal val allRule: Parser<Rule<String>> =
         sequence(
                 token("all").next(decision),
-                listBlock(rule()),
+                listBlock(ruleRef.lazy()),
                 { d, rs -> Rule.All(d, rs) }
         )
 
 internal val anyRule: Parser<Rule<String>> =
         sequence(
                 token("any").next(decision),
-                listBlock(rule()),
+                listBlock(ruleRef.lazy()),
                 { d, rs -> Rule.Any(d, rs) }
         )
 
 internal val exclusiveRule: Parser<Rule<String>> =
-        token("exclusive").next(listBlock(rule())).map { rs -> Rule.OneOf(rs) }
+        token("exclusive").next(listBlock(ruleRef.lazy())).map { rs -> Rule.OneOf(rs) }
 
-internal fun rule(): Parser<Rule<String>> = or(
+internal val rule: Parser<Rule<String>> = or(
         alwaysRule,
         neverRule,
         whenRule,
@@ -202,11 +202,13 @@ internal fun rule(): Parser<Rule<String>> = or(
         allRule,
         anyRule,
         exclusiveRule
-)
+).apply {
+    ruleRef.set(this)
+}
 
 val ruleSet: Parser<RuleSet<String>> =
         sequence(
                 attribute.many(),
-                rule().many(),
+                rule.many(),
                 { a, r -> RuleSet(a, r) }
         )

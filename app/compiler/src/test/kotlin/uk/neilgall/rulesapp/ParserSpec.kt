@@ -112,30 +112,30 @@ class ConditionParserSpec : StringSpec({
 
 class RuleParserSpec : StringSpec({
     "always permit" {
-        parse(rule(), "always permit") shouldEqual Rule.Always<String>(Decision.Permit)
+        parse(rule, "always permit") shouldEqual Rule.Always<String>(Decision.Permit)
     }
 
     "always deny" {
-        parse(rule(), "always deny") shouldEqual Rule.Always<String>(Decision.Deny)
+        parse(rule, "always deny") shouldEqual Rule.Always<String>(Decision.Deny)
     }
 
     "never" {
-        parse(rule(), "never") shouldEqual Rule.Never<String>()
+        parse(rule, "never") shouldEqual Rule.Never<String>()
     }
 
     "when" {
-        parse(rule(), "permit when abc = \"def\"") shouldEqual Rule.When(
+        parse(rule, "permit when abc = \"def\"") shouldEqual Rule.When(
                 Condition.Equal(a("abc"), s("def")),
                 Decision.Permit
         )
-        parse(rule(), "deny when 23 > 22") shouldEqual Rule.When(
+        parse(rule, "deny when 23 > 22") shouldEqual Rule.When(
                 Condition.Greater(n(23), n(22)),
                 Decision.Deny
         )
     }
 
     "one-leg branch" {
-        parse(rule(), "if \"abc\" = \"def\" always deny") shouldEqual Rule.Branch(
+        parse(rule, "if \"abc\" = \"def\" always deny") shouldEqual Rule.Branch(
                 Condition.Equal(s("abc"), s("def")),
                 Rule.Always(Decision.Deny),
                 Rule.Never()
@@ -143,7 +143,7 @@ class RuleParserSpec : StringSpec({
     }
 
     "two-leg branch" {
-        parse(rule(), "if 2 > 1 always permit else always deny") shouldEqual Rule.Branch(
+        parse(rule, "if 2 > 1 always permit else always deny") shouldEqual Rule.Branch(
                 Condition.Greater(n(2), n(1)),
                 Rule.Always(Decision.Permit),
                 Rule.Always(Decision.Deny)
@@ -151,28 +151,28 @@ class RuleParserSpec : StringSpec({
     }
 
     "majority" {
-        parse(rule(), "majority permit { always permit, always deny }") shouldEqual Rule.Majority(
+        parse(rule, "majority permit { always permit, always deny }") shouldEqual Rule.Majority(
                 Decision.Permit,
                 listOf(Rule.Always(Decision.Permit), Rule.Always<String>(Decision.Deny))
         )
     }
 
     "any" {
-        parse(rule(), "any permit { always permit, always deny }") shouldEqual Rule.Any(
+        parse(rule, "any permit { always permit, always deny }") shouldEqual Rule.Any(
                 Decision.Permit,
                 listOf(Rule.Always(Decision.Permit), Rule.Always<String>(Decision.Deny))
         )
     }
 
     "all" {
-        parse(rule(), "all deny { always permit, always deny }") shouldEqual Rule.All(
+        parse(rule, "all deny { always permit, always deny }") shouldEqual Rule.All(
                 Decision.Deny,
                 listOf(Rule.Always(Decision.Permit), Rule.Always<String>(Decision.Deny))
         )
     }
 
     "exclusive" {
-        parse(rule(), "exclusive { always permit, deny when a = b }") shouldEqual Rule.OneOf(
+        parse(rule, "exclusive { always permit, deny when a = b }") shouldEqual Rule.OneOf(
                 listOf(Rule.Always(Decision.Permit),
                         Rule.When(Condition.Equal(Term.Attribute("a"), Term.Attribute("b")), Decision.Deny)
                 )
@@ -180,7 +180,7 @@ class RuleParserSpec : StringSpec({
     }
 
     "complex rule" {
-        parse(rule(), """
+        parse(rule, """
             if foo = "bar"
               exclusive {
                 permit when a > b,
