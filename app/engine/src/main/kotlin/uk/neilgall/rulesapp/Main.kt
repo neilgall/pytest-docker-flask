@@ -14,6 +14,9 @@ open class EngineController {
 
     private var ruleSet: RuleSet<Attribute>? = null
 
+    @RequestMapping("/status")
+    fun status(): String = "ok"
+
     @RequestMapping("/load", method = [RequestMethod.POST])
     fun load(@RequestBody json: String): String {
         ruleSet = JSONObject(json).toRuleSet().resolve()

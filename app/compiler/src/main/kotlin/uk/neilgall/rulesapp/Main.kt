@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 open class CompilerController {
 
+    @RequestMapping("/status")
+    fun status(): String = "ok"
+
     @RequestMapping("/compile", method = [RequestMethod.POST])
     fun compile(@RequestBody source: String): String {
         val parsed = parse(ruleSet, source).resolve()
