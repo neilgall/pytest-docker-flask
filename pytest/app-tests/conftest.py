@@ -11,6 +11,8 @@ def _dockerised_rest_app(tmpdir, name):
 
 @pytest.fixture
 def compiler(tmpdir):
-    yield from _dockerised_rest_app(tmpdir, 'rulesapp-compiler')
+    yield from _dockerised_rest_app(tmpdir / 'compiler', 'rulesapp-compiler')
 
-
+@pytest.fixture
+def engine(tmpdir):
+    yield from _dockerised_rest_app(tmpdir / 'engine', 'rulesapp-engine')

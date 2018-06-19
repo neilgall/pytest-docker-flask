@@ -67,6 +67,7 @@ class DockerContainer(object):
         }
 
     def _write_tmpfile(self, base, ext, text):
+        os.makedirs(self._tmpdir, exist_ok=True)
         f = self._tmpdir / ('%s%s.%s' % (base, self._run_id, ext))
         f.write_text(text, encoding='utf8')
 
