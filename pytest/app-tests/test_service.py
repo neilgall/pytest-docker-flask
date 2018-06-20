@@ -3,7 +3,7 @@ from framework import RestClient, ContentType, Service
 import pytest
 import requests
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def simple_service():
     """
     Provides a simple service running in the pytest process
@@ -27,7 +27,8 @@ def test_service(compiler, engine, simple_service):
     
     assert engine.load(compiled)
 
-    with simple_service:
+    with simple_service as service:
         result = engine.query({})
         assert result[0].value == 'Permit'
+        assert len(service.invocations) == 1
     
