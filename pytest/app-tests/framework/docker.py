@@ -93,6 +93,7 @@ class DockerContainer(object):
             name=self._container_name(),
             detach=True,
             network=_network.name,
+            extra_hosts = { 'services': get_host_ip() },
             **self._args)
         
     def stop(self):

@@ -20,7 +20,7 @@ class RestClient(object):
         self._session = requests.Session()
 
     def __repr__(self):
-        return "API{base=%s}" % self._base
+        return "RestClient{base=%s}" % self._base
 
     def _url(self, path):
         sep = '' if len(path) > 0 and path[0] == '/' else '/'
