@@ -20,15 +20,14 @@ def test_service(compiler, engine, simple_service):
     """
     End-to-end test including a call to a local service
     """
-    compiled = compiler.post('/compile', content_type=ContentType.TEXT, data='''
+    compiled = compiler.compile('''
     result = GET "%s"
     if result = "ok" always permit else always deny
-    ''' % simple_service.url('/hello')).json()
+    ''' % simple_service.url('/hello'))
     
-    load = engine.post('/load', json=compiled).text
-    assert load == 'ok'
+    assert engine.load(compiled)
 
     with simple_service:
-        result = engine.post('/query', json={}).json()
-        assert result[0]['value'] == 'Permit'
+        result = engine.query({})
+        assert result[0].value == 'Permit'
     
