@@ -5,7 +5,7 @@
 FROM openjdk:latest
 
 WORKDIR /opt/rulesapp/engine
-COPY engine/build/libs/rulesapp-engine-*.jar engine.jar
+COPY build/libs/rulesapp-engine-*.jar engine.jar
 
 CMD java -jar engine.jar
 

@@ -5,7 +5,7 @@
 FROM openjdk:latest
 
 WORKDIR /opt/rulesapp/compiler
-COPY compiler/build/libs/rulesapp-compiler-*.jar compiler.jar
+COPY build/libs/rulesapp-compiler-*.jar compiler.jar
 
 CMD java -jar compiler.jar
 

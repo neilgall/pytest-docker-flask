@@ -69,6 +69,11 @@ project(':compiler') {
         baseName = 'rulesapp-compiler'
         version =  '0.1.0'
     }
+
+    task docker(type: Exec, dependsOn: bootJar) {
+        commandLine = "docker"
+        args = ["build", "-t", bootJar.baseName, "-f", "${projectDir}/Dockerfile", "."]
+    }
 }
 
 project(':engine') {
@@ -88,5 +93,10 @@ project(':engine') {
     bootJar {
         baseName = 'rulesapp-engine'
         version =  '0.1.0'
+    }
+
+    task docker(type: Exec, dependsOn: bootJar) {
+        commandLine = "docker"
+        args = ["build", "-t", bootJar.baseName, "-f", "${projectDir}/Dockerfile", "."]
     }
 }
