@@ -20,10 +20,10 @@ def test_service(compiler, engine, simple_service):
     """
     End-to-end test including a call to a local service
     """
-    compiled = compiler.compile('''
-    result = GET "%s"
+    compiled = compiler.compile(f'''
+    result = GET "{simple_service.url('/hello')}"
     if result = "ok" always permit else always deny
-    ''' % simple_service.url('/hello'))
+    ''')
     
     assert engine.load(compiled)
 
