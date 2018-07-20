@@ -1,7 +1,6 @@
 from flask import Flask
-from framework import RestClient, ContentType, Service
+from framework import Service
 import pytest
-import requests
 
 @pytest.fixture
 def simple_service():

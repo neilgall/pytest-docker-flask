@@ -1,6 +1,3 @@
-from framework import RestClient, ContentType
-import requests
-
 def test_end_to_end(compiler, engine):
     """
     Simple end-to-end test invoking the compiler and running the resulting code in the engine

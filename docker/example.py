@@ -23,5 +23,3 @@ if __name__ == '__main__':
                 print(">> %s" % line)
         except InterruptedError as e:
             pass
-
-
