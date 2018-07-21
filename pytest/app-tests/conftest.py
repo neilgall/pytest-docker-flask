@@ -10,20 +10,22 @@ def _dockerised_rest_app(tmpdir, name, client_class=RestClient):
         client.wait_for_ready()
         yield client
 
-@pytest.fixture
-def compiler(tmpdir):
+@pytest.fixture(scope='module')
+def compiler(tmpdir_factory):
     class CompilerClient(RestClient):
         def compile(self, text):
             return self.post('/compile', content_type=ContentType.TEXT, data=text).json()
 
-    yield from _dockerised_rest_app(tmpdir / 'compiler', 'rulesapp-compiler', CompilerClient)
+    tmpdir = tmpdir_factory.mktemp('compiler')
+    yield from _dockerised_rest_app(tmpdir, 'rulesapp-compiler', CompilerClient)
 
-@pytest.fixture
-def engine(tmpdir):
+@pytest.fixture(scope='module')
+def engine(tmpdir_factory):
     class EngineClient(RestClient):
         def load(self, json):
             return self.post('/load', content_type=ContentType.JSON, json=json).text == 'ok'
         def query(self, json):
             return munchify(self.post('/query', content_type=ContentType.JSON, json=json).json())
 
-    yield from _dockerised_rest_app(tmpdir / 'engine', 'rulesapp-engine', EngineClient)
+    tmpdir = tmpdir_factory.mktemp('engine')
+    yield from _dockerised_rest_app(tmpdir, 'rulesapp-engine', EngineClient)
