@@ -1,0 +1,12 @@
+version: '3'
+services:
+  compiler:
+    image: "rulesapp-compiler:latest"
+    ports:
+      - "8080:8080"
+  engine:
+    image: "rulesapp-engine:latest"
+    ports:
+      - "8090:8080"
+    extra_hosts:
+      external: "192.168.122.1"
