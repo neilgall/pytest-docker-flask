@@ -16,7 +16,7 @@ _docker = dockerlib.from_env()
 _network = _docker.networks.create('test-network', driver='bridge')
 atexit.register(_docker.networks.prune)
 
-class DockerContainer(object):
+class DockerContainer:
     """
     A context manager which runs a docker container in its context
     """

@@ -5,7 +5,7 @@ import threading
 import time
 import wsgiref
 
-class _Instrumented(object):
+class _Instrumented:
     "WSGI middleware for instrumenting an embedded service."
     def __init__(self, app):
         self._app = app
@@ -16,7 +16,7 @@ class _Instrumented(object):
         self.invocations.append((environ, rsp))
         return rsp
 
-class Service(object):
+class Service:
     """
     Provides a context manager server lifecycle around a flask-defined API.
     Create a Flask APP as normal then use as a context manager, e.g:

@@ -11,7 +11,7 @@ class ContentType:
     JSON = 'application/json'
     BINARY = 'application/octet-stream'
 
-class RestClient(object):
+class RestClient:
     """
     An API client
     """
