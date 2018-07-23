@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import docker as dockerlib
-import time
 
 docker = dockerlib.from_env()
 
