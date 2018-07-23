@@ -5,7 +5,7 @@ app = Flask("myValue")
 
 @app.route("/myValue")
 def hello():
-    return "bar"
+    return "foo"
 
 app.run(host='0.0.0.0', debug=True)
 
