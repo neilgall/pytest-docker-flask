@@ -34,9 +34,9 @@ class Service:
         self._server = None
 
         # add a shutdown hook to the Flask app
-        @flask_app.route('/service-control', methods=['POST','DELETE'])
+        @flask_app.route('/service-control', methods=['GET','DELETE'])
         def pip_control():
-            if flask.request.method == 'POST':
+            if flask.request.method == 'GET':
                 return "ok"
             elif flask.request.method == 'DELETE':
                 flask.request.environ.get('werkzeug.server.shutdown')()
@@ -61,7 +61,7 @@ class Service:
                 time.sleep(1)
             else:
                 try:
-                    rsp = requests.post('http://localhost:%d/service-control' % self._port, timeout=1)
+                    rsp = requests.get('http://localhost:%d/service-control' % self._port, timeout=1)
                     assert rsp.text == "ok"
                     return server
                 except:
