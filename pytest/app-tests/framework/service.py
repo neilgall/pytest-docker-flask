@@ -35,7 +35,7 @@ class Service:
 
         # add a shutdown hook to the Flask app
         @flask_app.route('/service-control', methods=['GET','DELETE'])
-        def pip_control():
+        def service_control():
             if flask.request.method == 'GET':
                 return "ok"
             elif flask.request.method == 'DELETE':

@@ -15,7 +15,7 @@ def simple_service():
 
     return Service(app)
 
-def test_service(compiler, engine, simple_service):
+def test_using_service(compiler, engine, simple_service):
     """
     End-to-end test including a call to a local service
     """
